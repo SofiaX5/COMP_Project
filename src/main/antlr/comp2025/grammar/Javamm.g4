@@ -22,6 +22,7 @@ THIS: 'this';
 STATIC: 'static';
 VOID: 'void';
 MAIN: 'main';
+STRING : 'String' ;
 
 INTEGER : [0-9]+ ;
 ID : [a-zA-Z$_][a-zA-Z$_0-9]* ;
@@ -29,7 +30,7 @@ ID : [a-zA-Z$_][a-zA-Z$_0-9]* ;
 WS : [ \t\n\r\f]+ -> skip ;
 
 program
-    : classDecl EOF
+    : (importDecl)* classDecl EOF
     ;
 
 importDecl
@@ -50,8 +51,8 @@ type
     |  INT '...'
     |  BOOL
     |  INT
-    //??? | 'String'
-    | name = ID
+    |  STRING
+    |  name = ID
     ;
 
 methodDecl locals[boolean isPublic=false]
@@ -59,8 +60,9 @@ methodDecl locals[boolean isPublic=false]
         type name=ID
         '(' param ')'
         '{' varDecl* stmt* RETURN expr ';' '}'
-    /*??? | (PUBLIC {$isPublic=true;})? STATIC VOID MAIN '(' 'String' '[' ']' name=ID ')'
-            '{' varDecl* stmt* '}' */
+    | (PUBLIC {$isPublic=true;})?
+        STATIC VOID MAIN '(' STRING '[' ']' ID ')'
+         '{' varDecl* stmt* '}'
 
     ;
 
@@ -79,18 +81,19 @@ stmt
     ;
 
 expr
-    : expr op= ('&&' | '<' | '+' | '-' | '*' | '/') expr // #BinaryExpr //
-    | expr '[' expr ']'
-    | expr '.' LENGTH
-    | expr '.' name=ID '('(expr (',' expr)*)?')'
-    | NEW INT '[' expr ']'
-    | NEW name=ID '('')'
-    | '!' expr
-    | '(' expr ')'
-    | '[' (expr (',' expr)*)? ']'
-    | value=INTEGER // #IntegerLiteral //
-    | TRUE | FALSE
-    | name=ID // #VarRefExpr //
-    | THIS
+    : expr op= ('&&' | '<' | '+' | '-' | '*' | '/') expr #BinaryExpr
+    | expr '[' expr ']'  #ArrayElemExpr
+    | expr '.' LENGTH #LengthExpr
+    | expr '.' name=ID '('(expr (',' expr)*)?')' #MethodCallExpr
+    | NEW INT '[' expr ']' #NewArrayExpr
+    | NEW name=ID '('')' #NewObjectExpr
+    | '!' expr #NotExpr
+    | '(' expr ')' #ParenthesizesExpr
+    | '[' (expr (',' expr)*)? ']' #ArrayExpr
+    | value=INTEGER #IntegerLiteral
+    | TRUE #BooleanLiteral
+    | FALSE #BooleanLiteral
+    | name=ID #VarRefExpr
+    | THIS #ThisExpr
     ;
 
