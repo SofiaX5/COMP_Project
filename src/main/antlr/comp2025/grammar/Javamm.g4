@@ -12,13 +12,16 @@ IMPORT : 'import';
 EXTENDS : 'extends';
 BOOL : 'boolean';
 IF: 'if';
-ELSE:' else';
+ELSE: 'else';
 WHILE: 'while';
 LENGTH: 'length';
 NEW: 'new';
 TRUE: 'true';
 FALSE: 'false';
 THIS: 'this';
+STATIC: 'static';
+VOID: 'void';
+MAIN: 'main';
 
 INTEGER : [0-9]+ ;
 ID : [a-zA-Z$_][a-zA-Z$_0-9]* ;
@@ -35,9 +38,7 @@ importDecl
 
 classDecl
     : CLASS name=ID (EXTENDS name=ID)?
-        '{'
-        varDecl* methodDecl*
-        '}'
+        '{' varDecl* methodDecl*'}'
     ;
 
 varDecl
@@ -49,6 +50,7 @@ type
     |  INT '...'
     |  BOOL
     |  INT
+    //??? | 'String'
     | name = ID
     ;
 
@@ -56,14 +58,15 @@ methodDecl locals[boolean isPublic=false]
     : (PUBLIC {$isPublic=true;})?
         type name=ID
         '(' param ')'
-        '{' varDecl* stmt* '}'
+        '{' varDecl* stmt* RETURN expr ';' '}'
+    /*??? | (PUBLIC {$isPublic=true;})? STATIC VOID MAIN '(' 'String' '[' ']' name=ID ')'
+            '{' varDecl* stmt* '}' */
+
     ;
 
 param
     :  (type name=ID (',' type name=ID)*)?
     ;
-
-// if(a)ifStmt;else elseStmt;
 
 stmt
     : '{' stmt* '}'
