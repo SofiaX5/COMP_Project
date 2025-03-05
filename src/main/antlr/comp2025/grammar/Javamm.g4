@@ -47,12 +47,12 @@ varDecl
     ;
 
 type
-    :  INT '['']'
-    |  INT '...'
-    |  BOOL
-    |  INT
-    |  STRING
-    |  name = ID
+    :  INT '['']' #ArrayType
+    |  INT '...' #VarargType
+    |  BOOL #BoolType
+    |  INT #IntType
+    |  STRING #StringType
+    |  name = ID #NameType
     ;
 
 methodDecl locals[boolean isPublic=false]
@@ -81,19 +81,22 @@ stmt
     ;
 
 expr
-    : expr op= ('&&' | '<' | '+' | '-' | '*' | '/') expr #BinaryExpr
+    : '!' expr #NotExpr
+    | expr op= ( '*' | '/' ) expr #BinaryExpr
+    | expr op= ( '+' | '-' ) expr #BinaryExpr
+    | expr op=  '<'  expr #BinaryExpr
+    | expr op= '&&' expr #BinaryExpr
     | expr '[' expr ']'  #ArrayElemExpr
     | expr '.' LENGTH #LengthExpr
     | expr '.' name=ID '('(expr (',' expr)*)?')' #MethodCallExpr
     | NEW INT '[' expr ']' #NewArrayExpr
     | NEW name=ID '('')' #NewObjectExpr
-    | '!' expr #NotExpr
     | '(' expr ')' #ParenthesizesExpr
     | '[' (expr (',' expr)*)? ']' #ArrayExpr
     | value=INTEGER #IntegerLiteral
     | TRUE #BooleanLiteral
     | FALSE #BooleanLiteral
-    | name=ID #VarRefExpr
     | THIS #ThisExpr
+    | name=ID #VarRefExpr
     ;
 

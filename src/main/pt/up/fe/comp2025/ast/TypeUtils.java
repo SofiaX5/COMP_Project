@@ -21,13 +21,30 @@ public class TypeUtils {
         return new Type("int", false);
     }
 
+//VISTO ?
     public static Type convertType(JmmNode typeNode) {
+        var kind = typeNode.getKind();
+        switch (kind) {
+            case "ArrayType" :
+                return new Type("int", true);
 
-        // TODO: When you support new types, this must be updated
-        var name = typeNode.get("name");
-        var isArray = false;
+            case "VarargType" : //?????????????????????????????
+                return new Type("int", true);
 
-        return new Type(name, isArray);
+            case "BoolType" :
+                return new Type("boolean", false);
+
+            case "IntType" :
+                return new Type("int", false);
+
+            case "StringType" :
+                return new Type("string", false);
+
+            case "NameType" :
+                var name = typeNode.get("name");
+                return new Type(name, false);
+        }
+        return new Type("int", false);
     }
 
 
@@ -37,8 +54,43 @@ public class TypeUtils {
      * @param expr
      * @return
      */
+    //VISTO?
     public Type getExprType(JmmNode expr) {
+        var kind = expr.getKind();
+        switch (kind) {
+            case "NotExpr" :
+            case "BooleanLiteral" :
+                return new Type("boolean", false);
 
+            case "BinaryExpr":
+                var op = expr.get("op");
+                if (op.equals("&&") || op.equals("<")) { return new Type("boolean", false);}
+                else if (op.equals("+") || op.equals("-") || op.equals("*") || op.equals("/")) {return new Type("int", false);}
+
+            case "ArrayElemExpr" :
+                return getExprType (expr.getChild(0));
+
+            case "IntegerLiteral":
+            case "LengthExpr" :
+                return new Type("int", false);
+
+            case "MethodCallExpr" :
+
+            case "ParenthesisEpr" :
+                return getExprType (expr.getChild(0));
+
+            case "ArrayExpr" :
+                return new Type("int", true);
+
+
+            case "VarRefExpr" :
+                /////////////////////////////????????????
+            case "ThisExpr" :
+                /// /////////////////////////////////////?
+
+
+
+        }
         // TODO: Update when there are new types
         return new Type("int", false);
     }
