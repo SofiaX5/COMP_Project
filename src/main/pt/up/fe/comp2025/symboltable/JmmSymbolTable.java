@@ -17,13 +17,15 @@ public class JmmSymbolTable extends AJmmSymbolTable {
     private final Map<String, Type> returnTypes;
     private final Map<String, List<Symbol>> params;
     private final Map<String, List<Symbol>> locals;
+    private final List<String> imports;
 
 
     public JmmSymbolTable(String className, String superClass,
                           List<String> methods,
                           Map<String, Type> returnTypes,
                           Map<String, List<Symbol>> params,
-                          Map<String, List<Symbol>> locals) {
+                          Map<String, List<Symbol>> locals,
+                          List<String> imports) {
 
         this.className = className;
         this.superClass = superClass;
@@ -31,11 +33,12 @@ public class JmmSymbolTable extends AJmmSymbolTable {
         this.returnTypes = returnTypes;
         this.params = params;
         this.locals = locals;
+        this.imports = imports;
     }
 
     @Override
     public List<String> getImports() {
-        throw new NotImplementedException();
+        return imports;
     }
 
     @Override

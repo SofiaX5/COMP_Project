@@ -49,8 +49,11 @@ public class JmmSymbolTableBuilder {
         var returnTypes = buildReturnTypes(classDecl);
         var params = buildParams(classDecl);
         var locals = buildLocals(classDecl);
+        var importsDecl = root.getChildren(IMPORT_DECL);
+        var imports = buildImports(importsDecl);
 
-        return new JmmSymbolTable(className, superClass, methods, returnTypes, params, locals);
+
+        return new JmmSymbolTable(className, superClass, methods, returnTypes, params, locals, imports);
     }
 
 
@@ -112,6 +115,18 @@ public class JmmSymbolTableBuilder {
                 .toList();
 
         return methods;
+    }
+
+    private List<String> buildImports(List <JmmNode> importsDecl) {
+        List<String> imports = new ArrayList<>();
+
+        for(var importDecl : importsDecl) {
+            List <String> import_ = importDecl.getObjectAsList("name", String.class);
+            System.out.println(import_.size());
+            imports.add(String.join(",", import_));
+        }
+
+        return imports;
     }
 
 
