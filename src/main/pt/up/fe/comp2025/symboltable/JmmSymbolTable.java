@@ -12,19 +12,21 @@ import java.util.stream.Collectors;
 public class JmmSymbolTable extends AJmmSymbolTable {
 
     private final String className;
+    private final String superClass;
     private final List<String> methods;
     private final Map<String, Type> returnTypes;
     private final Map<String, List<Symbol>> params;
     private final Map<String, List<Symbol>> locals;
 
 
-    public JmmSymbolTable(String className,
+    public JmmSymbolTable(String className, String superClass,
                           List<String> methods,
                           Map<String, Type> returnTypes,
                           Map<String, List<Symbol>> params,
                           Map<String, List<Symbol>> locals) {
 
         this.className = className;
+        this.superClass = superClass;
         this.methods = methods;
         this.returnTypes = returnTypes;
         this.params = params;
@@ -43,7 +45,7 @@ public class JmmSymbolTable extends AJmmSymbolTable {
 
     @Override
     public String getSuper() {
-        throw new NotImplementedException();
+        return superClass;
     }
 
     @Override

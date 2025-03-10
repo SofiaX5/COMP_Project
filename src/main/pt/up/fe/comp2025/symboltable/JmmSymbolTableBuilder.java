@@ -39,15 +39,18 @@ public class JmmSymbolTableBuilder {
         reports = new ArrayList<>();
 
         // TODO: After your grammar supports more things inside the program (e.g., imports) you will have to change this
-        var classDecl = root.getChild(0);
+        var classDecl = root.getChildren(CLASS_DECL).getFirst();
         SpecsCheck.checkArgument(Kind.CLASS_DECL.check(classDecl), () -> "Expected a class declaration: " + classDecl);
         String className = classDecl.get("name");
+        String superClass = classDecl.hasAttribute("superClass") ? classDecl.get("superClass") : null;
+        System.out.println(className);
+        System.out.println(superClass);
         var methods = buildMethods(classDecl);
         var returnTypes = buildReturnTypes(classDecl);
         var params = buildParams(classDecl);
         var locals = buildLocals(classDecl);
 
-        return new JmmSymbolTable(className, methods, returnTypes, params, locals);
+        return new JmmSymbolTable(className, superClass, methods, returnTypes, params, locals);
     }
 
 
@@ -57,7 +60,9 @@ public class JmmSymbolTableBuilder {
         for (var method : classDecl.getChildren(METHOD_DECL)) {
             var name = method.get("name");
             // TODO: After you add more types besides 'int', you will have to update this
-            var returnType = TypeUtils.newIntType();
+
+            // var returnType = TypeUtils.newIntType();
+            var returnType = TypeUtils.convertType(classDecl.getChildren("expr").getFirst());
             map.put(name, returnType);
         }
 

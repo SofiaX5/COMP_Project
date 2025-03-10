@@ -38,7 +38,7 @@ importDecl
     ;
 
 classDecl
-    : CLASS name=ID (EXTENDS name=ID)?
+    : CLASS name=ID (EXTENDS superClass=ID)?
         '{' varDecl* methodDecl*'}'
     ;
 
@@ -46,8 +46,9 @@ varDecl
     : type name=ID ';'
     ;
 
-type
-    :  INT '['']' #ArrayType
+type locals[boolean isArray=false]
+    : (PUBLIC {$isArray=true;})?
+          INT '['']' #ArrayType
     |  INT '...' #VarargType
     |  BOOL #BoolType
     |  INT #IntType
@@ -63,7 +64,6 @@ methodDecl locals[boolean isPublic=false]
     | (PUBLIC {$isPublic=true;})?
         STATIC VOID MAIN '(' STRING '[' ']' ID ')'
          '{' varDecl* stmt* '}'
-
     ;
 
 param
