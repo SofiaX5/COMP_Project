@@ -24,29 +24,28 @@ public class TypeUtils {
 //VISTO ?
     public static Type convertType(JmmNode typeNode) {
         var kind = typeNode.getKind();
-        boolean isArray =  Boolean.parseBoolean(typeNode.getOptional("isArray").orElse("false"));
+        boolean isArray = Boolean.parseBoolean(typeNode.getOptional("isArray").orElse("false"));
 
         switch (kind) {
-            case "ArrayType" :
-                return new Type("int", isArray);
+            case "ArrayType":
+            case "VarargType":
+                var baseType = typeNode.get("name");
+                return new Type(baseType, true);
 
-            case "VarargType" : //?????????????????????????????
-                return new Type("int", isArray);
-
-            case "BoolType" :
+            case "BoolType":
                 return new Type("boolean", isArray);
 
-            case "IntType" :
+            case "IntType":
                 return new Type("int", isArray);
 
-            case "StringType" :
-                return new Type("string", isArray);
+            case "StringType":
+                return new Type("String", isArray);
 
-            case "NameType" :
+            case "NameType":
                 var name = typeNode.get("name");
                 return new Type(name, isArray);
         }
-        return new Type(typeNode.get("name"), isArray);
+        return new Type("undefined", isArray);
     }
 
 

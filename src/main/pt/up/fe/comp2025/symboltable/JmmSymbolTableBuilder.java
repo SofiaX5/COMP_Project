@@ -51,9 +51,10 @@ public class JmmSymbolTableBuilder {
         var locals = buildLocals(classDecl);
         var importsDecl = root.getChildren(IMPORT_DECL);
         var imports = buildImports(importsDecl);
+        var fields = buildFields(classDecl);
 
 
-        return new JmmSymbolTable(className, superClass, methods, returnTypes, params, locals, imports);
+        return new JmmSymbolTable(className, superClass, methods, returnTypes, params, locals, imports, fields);
     }
 
 
@@ -62,11 +63,14 @@ public class JmmSymbolTableBuilder {
 
         for (var method : classDecl.getChildren(METHOD_DECL)) {
             var name = method.get("name");
-            // TODO: After you add more types besides 'int', you will have to update this
 
-            // var returnType = TypeUtils.newIntType();
-            var returnType = TypeUtils.convertType(classDecl.getChildren("expr").getFirst());
-            map.put(name, returnType);
+            if (method.getNumChildren() > 0) {
+                var typeNode = method.getChild(0);
+                Type returnType = TypeUtils.convertType(typeNode);
+                map.put(name, returnType);
+            } else {
+                map.put(name, new Type("void", false));
+            }
         }
 
         return map;
@@ -75,17 +79,18 @@ public class JmmSymbolTableBuilder {
 
     private Map<String, List<Symbol>> buildParams(JmmNode classDecl) {
         Map<String, List<Symbol>> map = new HashMap<>();
-
         for (var method : classDecl.getChildren(METHOD_DECL)) {
             var name = method.get("name");
-            var params = method.getChildren(PARAM).stream()
-                    // TODO: When you support new types, this code has to be updated
-                    .map(param -> new Symbol(TypeUtils.newIntType(), param.get("name")))
-                    .toList();
-
+            List<Symbol> params = new ArrayList<>();
+            var paramList = method.getChildren(PARAM);
+            for (var paramNode : paramList) {
+                var typeNode = paramNode.getChild(0);
+                var type = TypeUtils.convertType(typeNode);
+                var paramName = paramNode.get("name");
+                params.add(new Symbol(type, paramName));
+            }
             map.put(name, params);
         }
-
         return map;
     }
 
@@ -129,5 +134,17 @@ public class JmmSymbolTableBuilder {
         return imports;
     }
 
+    private List<Symbol> buildFields(JmmNode classDecl) {
+        List<Symbol> fields = new ArrayList<>();
+
+        for (JmmNode field : classDecl.getChildren(VAR_DECL)) {
+            var nodeType = field.getChild(0);
+            Type type = new Type(nodeType.get("name"), nodeType.getObject("isArray", Boolean.class));
+            String name = field.get("name");
+            fields.add(new Symbol(type, name));
+        }
+
+        return fields;
+    }
 
 }
