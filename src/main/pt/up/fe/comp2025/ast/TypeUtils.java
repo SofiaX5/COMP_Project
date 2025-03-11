@@ -29,8 +29,8 @@ public class TypeUtils {
         switch (kind) {
             case "ArrayType":
             case "VarargType":
-                var baseType = typeNode.get("name");
-                return new Type(baseType, true);
+                //var baseType = typeNode.get("name");
+                return new Type("int", true);
 
             case "BoolType":
                 return new Type("boolean", isArray);

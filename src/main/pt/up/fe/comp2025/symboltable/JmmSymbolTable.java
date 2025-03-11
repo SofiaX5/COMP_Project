@@ -59,12 +59,10 @@ public class JmmSymbolTable extends AJmmSymbolTable {
         return fields;
     }
 
-
     @Override
     public List<String> getMethods() {
         return methods;
     }
-
 
     @Override
     public Type getReturnType(String methodSignature) {
@@ -72,9 +70,7 @@ public class JmmSymbolTable extends AJmmSymbolTable {
     }
 
     @Override
-    public List<Symbol> getParameters(String methodSignature) {
-        return params.get(methodSignature);
-    }
+    public List<Symbol> getParameters(String methodSignature) { return params.get(methodSignature); }
 
     @Override
     public List<Symbol> getLocalVariables(String methodSignature) {
@@ -85,6 +81,5 @@ public class JmmSymbolTable extends AJmmSymbolTable {
     public String toString() {
         return print();
     }
-
 
 }

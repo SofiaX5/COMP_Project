@@ -62,12 +62,12 @@ methodDecl locals[boolean isPublic=false]
         '(' param ')'
         '{' varDecl* stmt* RETURN expr ';' '}'
     | (PUBLIC {$isPublic=true;})?
-        STATIC VOID MAIN '(' STRING '[' ']' ID ')'
+        STATIC VOID name=MAIN '(' STRING '[' ']' ID ')'
          '{' varDecl* stmt* '}'
     ;
 
 param
-    :  (type name=ID (',' type name=ID)*)?
+    :  (type name+=ID (',' type name+=ID)*)?
     ;
 
 stmt
