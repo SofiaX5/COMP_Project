@@ -32,7 +32,6 @@ public class JmmSymbolTableBuilder {
     }
 
     public JmmSymbolTable build(JmmNode root) {
-
         reports = new ArrayList<>();
 
         // TODO: After your grammar supports more things inside the program (e.g., imports) you will have to change this
@@ -76,46 +75,45 @@ public class JmmSymbolTableBuilder {
 
     private Map<String, List<Symbol>> buildParams(JmmNode classDecl) {
         Map<String, List<Symbol>> map = new HashMap<>();
+
         for (var method : classDecl.getChildren(METHOD_DECL)) {
             var name = method.get("name");
-                if (Objects.equals(name, "main")) {
-                    List<Symbol> params = new ArrayList<>();
-                    params.add(new Symbol(new Type("String", true), method.get("id")));
-                    map.put(name, params);
-                } else {
-                    List<JmmNode> paramList = method.getChildren(PARAM);
-                    if (!paramList.isEmpty()) {
-                        var param = method.getChildren(PARAM).getFirst();
-                        List <String> names = param.getObjectAsList("name", String.class);
-                        var typeList = param.getChildren(TYPE);
 
-                        List<Symbol> params = new ArrayList<>();
-                        for (var typeNode : typeList) {
-                            var type = TypeUtils.convertType(typeNode);
-                            params.add(new Symbol(type, names.getFirst()));
-                            names.removeFirst();
-                        }
-                        map.put(name, params);
+            if (Objects.equals(name, "main")) {
+                List<Symbol> params = new ArrayList<>();
+                params.add(new Symbol(new Type("String", true), method.get("id")));
+                map.put(name, params);
+            } else {
+                List<JmmNode> paramList = method.getChildren(PARAM);
+                if (!paramList.isEmpty()) {
+                    var param = method.getChildren(PARAM).getFirst();
+                    List <String> names = param.getObjectAsList("name", String.class);
+                    var typeList = param.getChildren(TYPE);
+
+                    List<Symbol> params = new ArrayList<>();
+                    for (var typeNode : typeList) {
+                        var type = TypeUtils.convertType(typeNode);
+                        params.add(new Symbol(type, names.getFirst()));
+                        names.removeFirst();
+                    }
+                    map.put(name, params);
                 }
             }
         }
+
         return map;
     }
 
     private Map<String, List<Symbol>> buildLocals(JmmNode classDecl) {
-
         var map = new HashMap<String, List<Symbol>>();
 
         for (var method : classDecl.getChildren(METHOD_DECL)) {
             if (method.hasAttribute("name")) {
                 var name = method.get("name");
-
                 var locals = method.getChildren(VAR_DECL).stream()
                         // TODO: When you support new types, this code has to be update :) VISTO?
                         .map(varDecl -> new Symbol(TypeUtils.convertType(varDecl.getChild(0)), varDecl.get("name")))
                         .toList();
-
-
                 map.put(name, locals);
             }
         }
@@ -125,10 +123,11 @@ public class JmmSymbolTableBuilder {
 
     private List<String> buildMethods(JmmNode classDecl) {
         List<String> methods = new ArrayList<>();
+
         for (var method : classDecl.getChildren(METHOD_DECL)) {
             methods.add(method.get("name"));
         }
-        System.out.println("Methods: " + methods);
+
         return methods;
     }
 

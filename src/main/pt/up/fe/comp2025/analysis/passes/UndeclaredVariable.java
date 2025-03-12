@@ -30,8 +30,28 @@ public class UndeclaredVariable extends AnalysisVisitor {
 
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
         currentMethod = method.get("name");
-        /*
+
         List<JmmNode> list_stmt = method.getChildren(Kind.STMT);
+
+        for (JmmNode stmt : list_stmt) {
+            var kind = stmt.getKind();
+            List<JmmNode> exprs = stmt.getChildren(Kind.EXPR);
+            if (Objects.equals(kind, "IfStmt")) {
+                var expr = exprs.getFirst();
+                if (!Objects.equals(TypeUtils.getExprType(expr), new Type("Boolean", false))) {
+                    var message = "If condition is not of type Boolean.";
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            method.getLine(),
+                            method.getColumn(),
+                            message,
+                            null)
+                    );
+                }
+            }
+        }
+
+        /* ISTO ESTÁ A DAR UM ERRO E EU NÃO PERCEBO PORQUÊ, FICA AQUI CASO POSSA SER ÚTIL :)
         while (!list_stmt.isEmpty()) {
 
             JmmNode stmt = list_stmt.getFirst();
@@ -61,7 +81,6 @@ public class UndeclaredVariable extends AnalysisVisitor {
             }
         }
          */
-
 
         List<JmmNode> list_expr = method.getChildren(Kind.EXPR);
         for (JmmNode expr : list_expr) {
@@ -113,7 +132,6 @@ public class UndeclaredVariable extends AnalysisVisitor {
 
         // Check if exists a parameter or variable declaration with the same name as the variable reference
         var varRefName = varRefExpr.get("name");
-        System.out.println(varRefName);
 
         // Var is a field, return
         if (table.getFields().stream()
