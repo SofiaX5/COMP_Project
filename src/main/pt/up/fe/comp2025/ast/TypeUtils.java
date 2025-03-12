@@ -26,26 +26,19 @@ public class TypeUtils {
         var kind = typeNode.getKind();
         boolean isArray = Boolean.parseBoolean(typeNode.getOptional("isArray").orElse("false"));
 
-        switch (kind) {
-            case "ArrayType":
-            case "VarargType":
+        return switch (kind) {
+            case "ArrayType", "VarargType" ->
                 //var baseType = typeNode.get("name");
-                return new Type("int", true);
-
-            case "BoolType":
-                return new Type("boolean", isArray);
-
-            case "IntType":
-                return new Type("int", isArray);
-
-            case "StringType":
-                return new Type("String", isArray);
-
-            case "NameType":
+                    new Type("int", true);
+            case "BoolType" -> new Type("boolean", isArray);
+            case "IntType" -> new Type("int", isArray);
+            case "StringType" -> new Type("String", isArray);
+            case "NameType" -> {
                 var name = typeNode.get("name");
-                return new Type(name, isArray);
-        }
-        return new Type("undefined", isArray);
+                yield new Type(name, isArray);
+            }
+            default -> new Type("undefined", isArray);
+        };
     }
 
 

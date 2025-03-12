@@ -9,10 +9,7 @@ import pt.up.fe.comp2025.ast.Kind;
 import pt.up.fe.comp2025.ast.TypeUtils;
 import pt.up.fe.specs.util.SpecsCheck;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static pt.up.fe.comp2025.ast.Kind.*;
 
@@ -80,21 +77,25 @@ public class JmmSymbolTableBuilder {
     private Map<String, List<Symbol>> buildParams(JmmNode classDecl) {
         Map<String, List<Symbol>> map = new HashMap<>();
         for (var method : classDecl.getChildren(METHOD_DECL)) {
-            if (method.hasAttribute("name")) {
-                var name = method.get("name");
-                List<JmmNode> paramList = method.getChildren(PARAM);
-                if (!paramList.isEmpty()) {
-                    var param = method.getChildren(PARAM).getFirst();
-                    List <String> names = param.getObjectAsList("name", String.class);
-                    var typeList = param.getChildren(TYPE);
-
+            var name = method.get("name");
+                if (Objects.equals(name, "main")) {
                     List<Symbol> params = new ArrayList<>();
-                    for (var typeNode : typeList) {
-                        var type = TypeUtils.convertType(typeNode);
-                        params.add(new Symbol(type, names.getFirst()));
-                        names.removeFirst();
-                    }
+                    params.add(new Symbol(new Type("String", true), method.get("id")));
                     map.put(name, params);
+                } else {
+                    List<JmmNode> paramList = method.getChildren(PARAM);
+                    if (!paramList.isEmpty()) {
+                        var param = method.getChildren(PARAM).getFirst();
+                        List <String> names = param.getObjectAsList("name", String.class);
+                        var typeList = param.getChildren(TYPE);
+
+                        List<Symbol> params = new ArrayList<>();
+                        for (var typeNode : typeList) {
+                            var type = TypeUtils.convertType(typeNode);
+                            params.add(new Symbol(type, names.getFirst()));
+                            names.removeFirst();
+                        }
+                        map.put(name, params);
                 }
             }
         }
