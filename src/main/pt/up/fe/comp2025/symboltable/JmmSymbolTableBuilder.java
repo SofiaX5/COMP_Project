@@ -82,18 +82,20 @@ public class JmmSymbolTableBuilder {
         for (var method : classDecl.getChildren(METHOD_DECL)) {
             if (method.hasAttribute("name")) {
                 var name = method.get("name");
+                List<JmmNode> paramList = method.getChildren(PARAM);
+                if (!paramList.isEmpty()) {
+                    var param = method.getChildren(PARAM).getFirst();
+                    List <String> names = param.getObjectAsList("name", String.class);
+                    var typeList = param.getChildren(TYPE);
 
-                var param = method.getChildren(PARAM).getFirst();
-                List <String> names = param.getObjectAsList("name", String.class);
-                var typeList = param.getChildren(TYPE);
-
-                List<Symbol> params = new ArrayList<>();
-                for (var typeNode : typeList) {
-                    var type = TypeUtils.convertType(typeNode);
-                    params.add(new Symbol(type, names.getFirst()));
-                    names.removeFirst();
+                    List<Symbol> params = new ArrayList<>();
+                    for (var typeNode : typeList) {
+                        var type = TypeUtils.convertType(typeNode);
+                        params.add(new Symbol(type, names.getFirst()));
+                        names.removeFirst();
+                    }
+                    map.put(name, params);
                 }
-                map.put(name, params);
             }
         }
         return map;
@@ -125,6 +127,7 @@ public class JmmSymbolTableBuilder {
         for (var method : classDecl.getChildren(METHOD_DECL)) {
             methods.add(method.get("name"));
         }
+        System.out.println("Methods: " + methods);
         return methods;
     }
 
@@ -140,21 +143,15 @@ public class JmmSymbolTableBuilder {
         return imports;
     }
 
-    // AINDA NÃO PASSA NO TESTE
     private List<Symbol> buildFields(JmmNode classDecl) {
         List<Symbol> fields = new ArrayList<>();
 
-        for (JmmNode field : classDecl.getChildren(VAR_DECL)) {
-            var nodeType = field.getChild(0);
-            String typeName = nodeType.hasAttribute("name") ? nodeType.get("name") : nodeType.getKind();
-            boolean isArray = nodeType.hasAttribute("isArray") && nodeType.getObject("isArray", Boolean.class);
-
-            Type type = new Type(typeName, isArray);
-            String name = field.get("name");
-            fields.add(new Symbol(type, name));
+        for (JmmNode var : classDecl.getChildren(VAR_DECL)) {
+            var typeNode = var.getChild(0);
+            Type typeName = TypeUtils.convertType(typeNode);
+            String name = var.get("name");
+            fields.add(new Symbol(typeName, name));
         }
-
-        System.out.println("Campos encontrados: " + fields);
 
         return fields;
     }
