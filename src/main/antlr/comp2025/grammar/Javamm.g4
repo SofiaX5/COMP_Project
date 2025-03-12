@@ -81,17 +81,17 @@ stmt
     ;
 
 expr
-    : '!' expr #NotExpr
+    : '(' expr ')' #ParenthesizesExpr
+    | NEW INT '[' expr ']' #NewArrayExpr
+    | NEW name=ID '('')' #NewObjectExpr
+    | expr '[' expr ']'  #ArrayElemExpr
+    | expr '.' LENGTH #LengthExpr
+    | expr '.' name=ID '('(expr (',' expr)*)?')' #MethodCallExpr
+    |'!' expr #NotExpr
     | expr op= ( '*' | '/' ) expr #BinaryExpr
     | expr op= ( '+' | '-' ) expr #BinaryExpr
     | expr op=  '<'  expr #BinaryExpr
     | expr op= '&&' expr #BinaryExpr
-    | expr '[' expr ']'  #ArrayElemExpr
-    | expr '.' LENGTH #LengthExpr
-    | expr '.' name=ID '('(expr (',' expr)*)?')' #MethodCallExpr
-    | NEW INT '[' expr ']' #NewArrayExpr
-    | NEW name=ID '('')' #NewObjectExpr
-    | '(' expr ')' #ParenthesizesExpr
     | '[' (expr (',' expr)*)? ']' #ArrayExpr
     | value=INTEGER #IntegerLiteral
     | TRUE #BooleanLiteral

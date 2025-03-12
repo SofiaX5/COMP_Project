@@ -49,7 +49,7 @@ public class TypeUtils {
      * @return
      */
     //VISTO?
-    public Type getExprType(JmmNode expr) {
+    public static Type getExprType(JmmNode expr) {
         var kind = expr.getKind();
         switch (kind) {
             case "NotExpr" :

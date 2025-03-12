@@ -1,12 +1,17 @@
 package pt.up.fe.comp2025.analysis.passes;
 
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
+import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.comp2025.analysis.AnalysisVisitor;
 import pt.up.fe.comp2025.ast.Kind;
+import pt.up.fe.comp2025.ast.TypeUtils;
 import pt.up.fe.specs.util.SpecsCheck;
+
+import java.util.List;
+import java.util.Objects;
 
 /**
  * Checks if the type of the expression in a return statement is compatible with the method return type.
@@ -25,6 +30,81 @@ public class UndeclaredVariable extends AnalysisVisitor {
 
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
         currentMethod = method.get("name");
+        /*
+        List<JmmNode> list_stmt = method.getChildren(Kind.STMT);
+        while (!list_stmt.isEmpty()) {
+
+            JmmNode stmt = list_stmt.getFirst();
+            list_stmt.removeFirst();
+            System.out.println("sdsdsds" + list_stmt);
+
+            List<JmmNode> list_stmt_temp = stmt.getChildren(Kind.STMT);
+            list_stmt.addAll(list_stmt_temp);
+
+            List<JmmNode> list_expr_temp = stmt.getChildren(Kind.EXPR);
+            for (JmmNode expr : list_expr_temp) {
+                if (expr.hasAttribute("op")) {
+                    List<JmmNode> operands = stmt.getChildren(Kind.EXPR);
+                    var op1 = operands.getFirst();
+                    var op2 = operands.get(1);
+                    if (TypeUtils.getExprType(op1) != TypeUtils.getExprType(op2)) {
+                        var message = "Operation variables don't have the same type.";
+                        addReport(Report.newError(
+                                Stage.SEMANTIC,
+                                method.getLine(),
+                                method.getColumn(),
+                                message,
+                                null)
+                        );
+                    }
+                }
+            }
+        }
+         */
+
+
+        List<JmmNode> list_expr = method.getChildren(Kind.EXPR);
+        for (JmmNode expr : list_expr) {
+            List<JmmNode> babies_expr = expr.getChildren(Kind.EXPR);
+            if (expr.hasAttribute("op")) {
+                var op = expr.get("op");
+                var op1 = babies_expr.getFirst();
+                var op2 = babies_expr.get(1);
+                if (op.equals("+")||op.equals(">")) {
+                    if ((Objects.equals(TypeUtils.getExprType(op1), new Type("String", false)) &&
+                            Objects.equals(TypeUtils.getExprType(op2), new Type("String", false))) ||
+                            Objects.equals(TypeUtils.getExprType(op1), new Type("Int", false)) &&
+                            Objects.equals(TypeUtils.getExprType(op2), new Type("Int", false))) {
+                        return null;
+                    } else {
+                        var message = String.format("Operands type are not adequate for the operation %s.", op);
+                        addReport(Report.newError(
+                                Stage.SEMANTIC,
+                                method.getLine(),
+                                method.getColumn(),
+                                message,
+                                null)
+                        );
+                    }
+
+                } else if (op.equals("-")||op.equals("*")||op.equals("/")) {
+                    if (Objects.equals(TypeUtils.getExprType(op1), new Type("Int", false)) &&
+                        Objects.equals(TypeUtils.getExprType(op2), new Type("Int", false))) {
+                        return null;
+                    } else {
+                        var message = String.format("Operands type are not adequate for the operation %s.", op);
+                        addReport(Report.newError(
+                                Stage.SEMANTIC,
+                                method.getLine(),
+                                method.getColumn(),
+                                message,
+                                null)
+                        );
+                    }
+                }
+            }
+        }
+
         return null;
     }
 
@@ -33,17 +113,11 @@ public class UndeclaredVariable extends AnalysisVisitor {
 
         // Check if exists a parameter or variable declaration with the same name as the variable reference
         var varRefName = varRefExpr.get("name");
-
+        System.out.println(varRefName);
 
         // Var is a field, return
         if (table.getFields().stream()
                 .anyMatch(field -> field.getName().equals(varRefName))) {
-            return null;
-        }
-
-        // Var is a method, return
-        if (table.getMethods().stream()
-                .anyMatch(method -> method.equals(varRefName))) {
             return null;
         }
 
@@ -56,6 +130,12 @@ public class UndeclaredVariable extends AnalysisVisitor {
         // Var is a declared variable, return
         if (table.getLocalVariables(currentMethod).stream()
                 .anyMatch(varDecl -> varDecl.getName().equals(varRefName))) {
+            return null;
+        }
+
+        // Import is a declared variable, return
+        if (table.getImports().stream()
+                .anyMatch(import_ -> import_.equals(varRefName))) {
             return null;
         }
 
