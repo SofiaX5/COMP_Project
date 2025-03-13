@@ -23,6 +23,8 @@ public enum Kind {
     FIELD_DECL,
     PARAM,
     STMT,
+    ARRAY_EXPR,
+    NEW_ARRAY_EXPR,
     ASSIGN_STMT,
     RETURN_STMT,
     EXPR,

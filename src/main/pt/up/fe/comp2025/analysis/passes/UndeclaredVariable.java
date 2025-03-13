@@ -22,6 +22,10 @@ public class UndeclaredVariable extends AnalysisVisitor {
 
     private String currentMethod;
 
+    public UndeclaredVariable(SymbolTable symbolTable) {
+        super(symbolTable);
+    }
+
     @Override
     public void buildVisitor() {
         addVisit(Kind.METHOD_DECL, this::visitMethodDecl);

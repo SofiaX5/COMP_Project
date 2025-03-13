@@ -16,7 +16,7 @@ public abstract class AnalysisVisitor extends PreorderJmmVisitor<SymbolTable, Vo
 
     private List<Report> reports;
 
-    public AnalysisVisitor() {
+    public AnalysisVisitor(SymbolTable symbolTable) {
         reports = new ArrayList<>();
         setDefaultValue(() -> null);
     }
