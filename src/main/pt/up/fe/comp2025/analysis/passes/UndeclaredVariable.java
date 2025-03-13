@@ -30,6 +30,7 @@ public class UndeclaredVariable extends AnalysisVisitor {
     public void buildVisitor() {
         addVisit(Kind.METHOD_DECL, this::visitMethodDecl);
         addVisit(Kind.VAR_REF_EXPR, this::visitVarRefExpr);
+        addVisit(Kind.ASSIGN_STMT, this::visitAssignStmt);
     }
 
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
@@ -174,6 +175,24 @@ public class UndeclaredVariable extends AnalysisVisitor {
 
         return null;
     }
+
+    private Void visitAssignStmt(JmmNode assignStmt, SymbolTable table) {
+        List<JmmNode> exprs = assignStmt.getChildren(Kind.EXPR);
+        JmmNode leftExpr = exprs.get(0);
+        JmmNode rightExpr = exprs.get(1);
+
+        Type leftType = TypeUtils.getExprType(leftExpr, table);
+        Type rightType = TypeUtils.getExprType(rightExpr, table);
+
+        if (leftType != null && rightType != null && leftType.getName().equals("boolean") && rightType.getName().equals("int")) {
+            var message = String.format("Cannot assign an Int value to a Boolean variable '%s'.", leftExpr.get("name"));
+            addReport(Report.newError( Stage.SEMANTIC, assignStmt.getLine(), assignStmt.getColumn(), message, null)
+            );
+        }
+
+        return null;
+    }
+
 
 
 }

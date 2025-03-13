@@ -32,7 +32,8 @@ public class JmmAnalysisImpl implements JmmAnalysis {
         return List.of(
                 new UndeclaredVariable(table),
                 new ArrayPasses(table),
-                new VarargPasses(table)
+                new VarargPasses(table),
+                new UndeclaredPasses(table)
         );
     }
 
