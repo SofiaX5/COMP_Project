@@ -24,14 +24,17 @@ public enum Kind {
     PARAM,
     STMT,
     ARRAY_EXPR,
+    ARRAY_ASSIGN_STMT,
     ARRAY_ELEM_EXPR,
     WHILE_STMT,
     IF_STMT,
     NEW_ARRAY_EXPR,
+    METHOD_CALL_EXPR,
     ASSIGN_STMT,
     RETURN_STMT,
     EXPR,
     BINARY_EXPR,
+    THIS_EXPR,
     INTEGER_LITERAL,
     VAR_REF_EXPR;
 

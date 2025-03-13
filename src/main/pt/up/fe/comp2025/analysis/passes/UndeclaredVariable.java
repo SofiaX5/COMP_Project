@@ -42,7 +42,7 @@ public class UndeclaredVariable extends AnalysisVisitor {
             List<JmmNode> exprs = stmt.getChildren(Kind.EXPR);
             if (Objects.equals(kind, "IfStmt")) {
                 var expr = exprs.getFirst();
-                if (!Objects.equals(TypeUtils.getExprType(expr), new Type("Boolean", false))) {
+                if (!Objects.equals(TypeUtils.getExprType(expr, table), new Type("Boolean", false))) {
                     var message = "If condition is not of type Boolean.";
                     addReport(Report.newError(
                             Stage.SEMANTIC,
@@ -94,10 +94,10 @@ public class UndeclaredVariable extends AnalysisVisitor {
                 var op1 = babies_expr.getFirst();
                 var op2 = babies_expr.get(1);
                 if (op.equals("+")||op.equals(">")) {
-                    if ((Objects.equals(TypeUtils.getExprType(op1), new Type("String", false)) &&
-                            Objects.equals(TypeUtils.getExprType(op2), new Type("String", false))) ||
-                            Objects.equals(TypeUtils.getExprType(op1), new Type("Int", false)) &&
-                            Objects.equals(TypeUtils.getExprType(op2), new Type("Int", false))) {
+                    if ((Objects.equals(TypeUtils.getExprType(op1,  table), new Type("String", false)) &&
+                            Objects.equals(TypeUtils.getExprType(op2, table), new Type("String", false))) ||
+                            Objects.equals(TypeUtils.getExprType(op1,table), new Type("Int", false)) &&
+                            Objects.equals(TypeUtils.getExprType(op2,table), new Type("Int", false))) {
                         return null;
                     } else {
                         var message = String.format("Operands type are not adequate for the operation %s.", op);
@@ -111,8 +111,8 @@ public class UndeclaredVariable extends AnalysisVisitor {
                     }
 
                 } else if (op.equals("-")||op.equals("*")||op.equals("/")) {
-                    if (Objects.equals(TypeUtils.getExprType(op1), new Type("Int", false)) &&
-                        Objects.equals(TypeUtils.getExprType(op2), new Type("Int", false))) {
+                    if (Objects.equals(TypeUtils.getExprType(op1, table), new Type("Int", false)) &&
+                        Objects.equals(TypeUtils.getExprType(op2, table), new Type("Int", false))) {
                         return null;
                     } else {
                         var message = String.format("Operands type are not adequate for the operation %s.", op);

@@ -46,10 +46,10 @@ public class ArrayPasses extends AnalysisVisitor {
             return null;
         }
 
-        Type firstElementType = TypeUtils.getExprType(elements.getFirst());
+        Type firstElementType = TypeUtils.getExprType(elements.getFirst(), table);
 
         for (int i = 1; i < elements.size(); i++) {
-            Type currentType = TypeUtils.getExprType(elements.get(i));
+            Type currentType = TypeUtils.getExprType(elements.get(i), table);
 
             if (!Objects.equals(firstElementType, currentType)) {
                 var message = "Array elements must have the same type. Found: " +
@@ -77,7 +77,7 @@ public class ArrayPasses extends AnalysisVisitor {
             JmmNode rightSide = children.get(1);
 
             if (rightSide.getKind().equals(Kind.ARRAY_EXPR.toString())) {
-                Type leftType = TypeUtils.getExprType(leftSide);
+                Type leftType = TypeUtils.getExprType(leftSide,table);
 
                 if (!leftType.isArray()) {
                     var message = "Cannot assign array to non-array variable";
@@ -91,7 +91,7 @@ public class ArrayPasses extends AnalysisVisitor {
                 } else {
                     Type expectedElementType = new Type(leftType.getName(), false);
                     for (JmmNode element : rightSide.getChildren()) {
-                        Type elementType = TypeUtils.getExprType(element);
+                        Type elementType = TypeUtils.getExprType(element,table);
                         if (!Objects.equals(expectedElementType, elementType)) {
                             var message = "Invalid array element type. Expected: " +
                                     expectedElementType.getName() + ", Found: " + elementType.getName();
@@ -114,9 +114,9 @@ public class ArrayPasses extends AnalysisVisitor {
 
     private Void visitNewArrayExpr(JmmNode node, SymbolTable table) {
         JmmNode sizeExpr = node.getChildren().getFirst();
-        Type sizeType = TypeUtils.getExprType(sizeExpr);
+        Type sizeType = TypeUtils.getExprType(sizeExpr,table);
 
-        if (!sizeType.getName().equals("int") || sizeType.isArray()) {
+        if ((!sizeType.getName().equals("Int") && !sizeType.getName().equals("int")) || sizeType.isArray()) {
             var message = "Array size must be an integer expression";
             addReport(Report.newError(
                     Stage.SEMANTIC,
@@ -137,7 +137,7 @@ public class ArrayPasses extends AnalysisVisitor {
             JmmNode arrayExpr = children.get(0);
             JmmNode indexExpr = children.get(1);
 
-            Type arrayType = TypeUtils.getExprType(arrayExpr);
+            Type arrayType = TypeUtils.getExprType(arrayExpr,table);
             if (!arrayType.isArray()) {
                 var message = "Cannot perform array access on non-array type: " + arrayType.getName();
                 addReport(Report.newError(
@@ -149,8 +149,8 @@ public class ArrayPasses extends AnalysisVisitor {
                 ));
             }
 
-            Type indexType = TypeUtils.getExprType(indexExpr);
-            if (!Objects.equals(indexType.getName(), "int") || indexType.isArray()) {
+            Type indexType = TypeUtils.getExprType(indexExpr,table);
+            if ((!Objects.equals(indexType.getName(), "int") && !Objects.equals(indexType.getName(), "Int")) || indexType.isArray()) {
                 var message = "Array index must be an integer expression";
                 addReport(Report.newError(
                         Stage.SEMANTIC,
@@ -170,7 +170,7 @@ public class ArrayPasses extends AnalysisVisitor {
 
         if (!children.isEmpty()) {
             JmmNode conditionExpr = children.getFirst();
-            Type conditionType = TypeUtils.getExprType(conditionExpr);
+            Type conditionType = TypeUtils.getExprType(conditionExpr,table);
 
             if (conditionType.isArray() || !Objects.equals(conditionType.getName(), "boolean")) {
                 var message = "While condition must be a boolean expression, not " +
@@ -188,13 +188,12 @@ public class ArrayPasses extends AnalysisVisitor {
         return null;
     }
 
-    // Check that if condition is boolean, not an array
     private Void visitIfStmt(JmmNode node, SymbolTable table) {
         List<JmmNode> children = node.getChildren();
 
         if (!children.isEmpty()) {
             JmmNode conditionExpr = children.getFirst();
-            Type conditionType = TypeUtils.getExprType(conditionExpr);
+            Type conditionType = TypeUtils.getExprType(conditionExpr, table);
 
             if (conditionType.isArray() || !Objects.equals(conditionType.getName(), "boolean")) {
                 var message = "If condition must be a boolean expression, not " +
@@ -212,10 +211,9 @@ public class ArrayPasses extends AnalysisVisitor {
         return null;
     }
 
-    // Extra check for variable reference expressions
+
     private Void visitVarRefExpr(JmmNode node, SymbolTable table) {
-        // This method can be used for additional checks specific to variable references
-        // that might be related to arrays
+        // can be used for additional checks maybeee
         return null;
     }
 
