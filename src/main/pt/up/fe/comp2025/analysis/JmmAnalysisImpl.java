@@ -31,7 +31,8 @@ public class JmmAnalysisImpl implements JmmAnalysis {
     private List<AnalysisVisitor> buildPasses(SymbolTable table) {
         return List.of(
                 new UndeclaredVariable(table),
-                new ArrayPasses(table)
+                new ArrayPasses(table),
+                new VarargPasses(table)
         );
     }
 

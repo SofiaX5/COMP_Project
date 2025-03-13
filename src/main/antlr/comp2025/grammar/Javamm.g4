@@ -46,24 +46,24 @@ varDecl
     : type name=ID ';'
     ;
 
-type locals[boolean isArray=false]
+type locals[boolean isArray=false, boolean isEllipsis=false]
     : (PUBLIC {$isArray=true;})?
           INT '['']' #ArrayType
-    |  INT '...' #VarargType
+    |  INT '...' {$isArray=true; $isEllipsis=true;} #VarargType
     |  BOOL #BoolType
     |  INT #IntType
     |  STRING #StringType
     |  name = ID #NameType
     ;
 
-methodDecl locals[boolean isPublic=false]
+methodDecl locals[boolean isPublic=false, boolean isEmpty=false]
     : (PUBLIC {$isPublic=true;})?
         type name=ID
         '(' param ')'
         '{' varDecl* stmt* RETURN expr ';' '}'
     | (PUBLIC {$isPublic=true;})?
         STATIC VOID name=MAIN '(' STRING '[' ']' id=ID ')'
-         '{' varDecl* stmt* '}'
+         '{' varDecl* stmt* '}' {$isEmpty=true;}
     ;
 
 param
