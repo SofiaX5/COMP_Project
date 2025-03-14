@@ -28,6 +28,9 @@ INTEGER : [0-9]+ ;
 ID : [a-zA-Z$_][a-zA-Z$_0-9]* ;
 
 WS : [ \t\n\r\f]+ -> skip ;
+LINE_COMMENT : '//' ~[\r\n]* -> skip ;
+BLOCK_COMMENT : '/*' .*? '*/' -> skip ;
+
 
 program
     : (importDecl)* classDecl EOF

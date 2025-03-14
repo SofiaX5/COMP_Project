@@ -162,7 +162,6 @@ public class UndeclaredVariable extends AnalysisVisitor {
             return null;
         }
 
-
         // Create error report
         var message = String.format("Variable '%s' does not exist.", varRefName);
         addReport(Report.newError(
@@ -176,6 +175,9 @@ public class UndeclaredVariable extends AnalysisVisitor {
         return null;
     }
 
+    // Tests ObjectAssignmentFail and ObjectAssignmentPassImports  are not compatible
+    // ObjectAssignmentPassImports has a comment that we can assigned 2 different objects
+
     private Void visitAssignStmt(JmmNode assignStmt, SymbolTable table) {
         List<JmmNode> exprs = assignStmt.getChildren(Kind.EXPR);
         JmmNode leftExpr = exprs.get(0);
@@ -186,13 +188,56 @@ public class UndeclaredVariable extends AnalysisVisitor {
 
         if (leftType != null && rightType != null && leftType.getName().equals("boolean") && rightType.getName().equals("int")) {
             var message = String.format("Cannot assign an Int value to a Boolean variable '%s'.", leftExpr.get("name"));
-            addReport(Report.newError( Stage.SEMANTIC, assignStmt.getLine(), assignStmt.getColumn(), message, null)
-            );
+            addReport(Report.newError(Stage.SEMANTIC, assignStmt.getLine(), assignStmt.getColumn(), message, null));
+            return null;
+        }
+
+        if (leftType != null && rightType != null &&
+                !isPrimitiveType(leftType) && !isPrimitiveType(rightType) &&
+                !leftType.getName().equals(rightType.getName())) {
+
+            boolean isAssigningToCurrentClass = leftType.getName().equals(table.getClassName());
+
+            boolean isExtending = false;
+            if (table.getSuper() != null && rightType.getName().equals(table.getClassName()) &&
+                    leftType.getName().equals(table.getSuper())) {
+                isExtending = true;
+            }
+
+            boolean leftTypeImported = isTypeImported(leftType.getName(), table);
+            boolean rightTypeImported = isTypeImported(rightType.getName(), table);
+
+            boolean compatibleByImport = (leftTypeImported && rightTypeImported);
+
+            if (isAssigningToCurrentClass && !isExtending && !compatibleByImport) {
+                var message = String.format("Cannot assign object of type '%s' to variable of type '%s'.",
+                        rightType.getName(), leftType.getName());
+                addReport(Report.newError(Stage.SEMANTIC, assignStmt.getLine(), assignStmt.getColumn(), message, null));
+            }
+            else if (!isExtending && !compatibleByImport) {
+                var message = String.format("Cannot assign object of type '%s' to variable of type '%s'.",
+                        rightType.getName(), leftType.getName());
+                addReport(Report.newError(Stage.SEMANTIC, assignStmt.getLine(), assignStmt.getColumn(), message, null));
+            }
         }
 
         return null;
     }
 
+    private boolean isTypeImported(String typeName, SymbolTable table) {
+        for (String importName : table.getImports()) {
+            if (importName.endsWith("." + typeName) || importName.equals(typeName)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
+    private boolean isPrimitiveType(Type type) {
+        return type.isArray() ||
+                type.getName().equals("int") ||
+                type.getName().equals("boolean") ||
+                type.getName().equals("void");
+    }
 
 }
