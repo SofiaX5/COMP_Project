@@ -198,11 +198,8 @@ public class UndeclaredVariable extends AnalysisVisitor {
 
             boolean isAssigningToCurrentClass = leftType.getName().equals(table.getClassName());
 
-            boolean isExtending = false;
-            if (table.getSuper() != null && rightType.getName().equals(table.getClassName()) &&
-                    leftType.getName().equals(table.getSuper())) {
-                isExtending = true;
-            }
+            boolean isExtending = table.getSuper() != null && rightType.getName().equals(table.getClassName()) &&
+                    leftType.getName().equals(table.getSuper());
 
             boolean leftTypeImported = isTypeImported(leftType.getName(), table);
             boolean rightTypeImported = isTypeImported(rightType.getName(), table);

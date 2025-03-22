@@ -14,17 +14,16 @@ BOOL : 'boolean';
 IF: 'if';
 ELSE: 'else';
 WHILE: 'while';
-LENGTH: 'length';
+LENGTH: 'length'; //XXXXXX
 NEW: 'new';
-TRUE: 'true';
-FALSE: 'false';
+TRUE: 'true'; //XXXXXX
+FALSE: 'false'; //XXXXXX
 THIS: 'this';
 STATIC: 'static';
 VOID: 'void';
-MAIN: 'main';
-STRING : 'String' ;
+STRING : 'String';  //XXXXXX
 
-INTEGER : [0-9]+ ;
+INTEGER : ([0]|([1-9][0-9]*)) ;
 ID : [a-zA-Z$_][a-zA-Z$_0-9]* ;
 
 WS : [ \t\n\r\f]+ -> skip ;
@@ -51,12 +50,12 @@ varDecl
 
 type locals[boolean isArray=false, boolean isEllipsis=false]
     : (PUBLIC {$isArray=true;})?
-          INT '['']' #ArrayType
+          INT '['']'                                #ArrayType
     |  INT '...' {$isArray=true; $isEllipsis=true;} #VarargType
-    |  BOOL #BoolType
-    |  INT #IntType
-    |  STRING #StringType
-    |  name = ID #NameType
+    |  BOOL                                         #BoolType
+    |  INT                                          #IntType
+    |  STRING                                       #StringType
+    |  name = ID                                    #NameType
     ;
 
 methodDecl locals[boolean isPublic=false, boolean isEmpty=false]
@@ -65,7 +64,7 @@ methodDecl locals[boolean isPublic=false, boolean isEmpty=false]
         '(' param ')'
         '{' varDecl* stmt* RETURN expr ';' '}'
     | (PUBLIC {$isPublic=true;})?
-        STATIC VOID name=MAIN '(' STRING '[' ']' id=ID ')'
+        STATIC VOID name=ID '(' STRING '[' ']' id=ID ')'
          '{' varDecl* stmt* '}' {$isEmpty=true;}
     ;
 
@@ -84,22 +83,22 @@ stmt
     ;
 
 expr
-    : '(' expr ')' #ParenthesizesExpr
-    | NEW INT '[' expr ']' #NewArrayExpr
-    | NEW name=ID '('')' #NewObjectExpr
-    | expr '[' expr ']'  #ArrayElemExpr
-    | expr '.' LENGTH #LengthExpr
-    | expr '.' name=ID '('(expr (',' expr)*)?')' #MethodCallExpr
-    |'!' expr #NotExpr
-    | expr op= ( '*' | '/' ) expr #BinaryExpr
-    | expr op= ( '+' | '-' ) expr #BinaryExpr
-    | expr op=  '<'  expr #BinaryExpr
-    | expr op= '&&' expr #BinaryExpr
-    | '[' (expr (',' expr)*)? ']' #ArrayExpr
-    | value=INTEGER #IntegerLiteral
-    | TRUE #BooleanLiteral
-    | FALSE #BooleanLiteral
-    | THIS #ThisExpr
-    | name=ID #VarRefExpr
+    : '(' expr ')'                                  #ParenthesizesExpr
+    | NEW INT '[' expr ']'                          #NewArrayExpr
+    | NEW name=ID '('')'                            #NewObjectExpr
+    | expr '[' expr ']'                             #ArrayElemExpr
+    | expr '.' LENGTH                               #LengthExpr
+    | expr '.' name=ID '('(expr (',' expr)*)?')'    #MethodCallExpr
+    |'!' expr                                       #NotExpr
+    | expr op= ( '*' | '/' ) expr                   #BinaryExpr
+    | expr op= ( '+' | '-' ) expr                   #BinaryExpr
+    | expr op=  '<'  expr                           #BinaryExpr
+    | expr op= '&&' expr                            #BinaryExpr
+    | '[' (expr (',' expr)*)? ']'                   #ArrayExpr
+    | value=INTEGER                                 #IntegerLiteral
+    | TRUE                                          #BooleanLiteral
+    | FALSE                                         #BooleanLiteral
+    | THIS                                          #ThisExpr
+    | name=ID                                       #VarRefExpr
     ;
 
