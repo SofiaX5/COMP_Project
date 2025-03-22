@@ -1,0 +1,5 @@
+class a {
+    String a() {
+        return 1;
+    }
+}

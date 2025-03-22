@@ -2,6 +2,7 @@ package pt.up.fe.comp.cp1;
 
 import org.junit.Test;
 import pt.up.fe.comp.TestUtils;
+import pt.up.fe.specs.util.SpecsIo;
 
 public class OurTest {
     private static final String IMPORT = "importDecl";
@@ -24,6 +25,146 @@ public class OurTest {
     public void testMainVariable() {
         TestUtils.noErrors(TestUtils.parse("class A {int main;}"));
     }
+
+
+    // Return types
+    @Test
+    public void returnTest1() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_1.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void returnTest2() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_2.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void returnTest3() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_14.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void returnTest4() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_15.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void returnTest5() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_16.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void returnTest6() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_17.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void returnTest7() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_18.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+
+
+
+    @Test
+    public void voidTest1() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_3.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void voidTest2() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_4.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+
+
+
+    @Test
+    public void ifTest1() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_5.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void ifTest2() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_6.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void ifTest3() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_7.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void ifTest4() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_8.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void ifTest5() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_9.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void ifTest6() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_10.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void ifTest7() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_11.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void ifTest8() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_12.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void ifTest9() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_13.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+
+
+
+    @Test
+    public void arrayTest1() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_19.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void arrayTest2() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_20.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void arrayTest3() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_21.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+
+
 
 
     // NÃO É PARA FAZER
