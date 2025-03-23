@@ -70,6 +70,18 @@ public class OurTest {
         TestUtils.mustFail(result);
     }
 
+    @Test
+    public void returnTest8() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_22.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void returnTest9() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_23.jmm"));
+        TestUtils.mustFail(result);
+    }
+
 
 
 

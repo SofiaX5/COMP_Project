@@ -37,7 +37,6 @@ public class UndeclaredVariable extends AnalysisVisitor {
         currentMethod = method.get("name");
 
         List<JmmNode> list_stmt = method.getChildren(Kind.STMT);
-
         for (JmmNode stmt : list_stmt) {
             var kind = stmt.getKind();
             List<JmmNode> exprs = stmt.getChildren(Kind.EXPR);
@@ -55,37 +54,6 @@ public class UndeclaredVariable extends AnalysisVisitor {
                 }
             }
         }
-
-        /* ISTO ESTÁ A DAR UM ERRO E EU NÃO PERCEBO PORQUÊ, FICA AQUI CASO POSSA SER ÚTIL :)
-        while (!list_stmt.isEmpty()) {
-
-            JmmNode stmt = list_stmt.getFirst();
-            list_stmt.removeFirst();
-            System.out.println("sdsdsds" + list_stmt);
-
-            List<JmmNode> list_stmt_temp = stmt.getChildren(Kind.STMT);
-            list_stmt.addAll(list_stmt_temp);
-
-            List<JmmNode> list_expr_temp = stmt.getChildren(Kind.EXPR);
-            for (JmmNode expr : list_expr_temp) {
-                if (expr.hasAttribute("op")) {
-                    List<JmmNode> operands = stmt.getChildren(Kind.EXPR);
-                    var op1 = operands.getFirst();
-                    var op2 = operands.get(1);
-                    if (TypeUtils.getExprType(op1) != TypeUtils.getExprType(op2)) {
-                        var message = "Operation variables don't have the same type.";
-                        addReport(Report.newError(
-                                Stage.SEMANTIC,
-                                method.getLine(),
-                                method.getColumn(),
-                                message,
-                                null)
-                        );
-                    }
-                }
-            }
-        }
-         */
 
         List<JmmNode> list_expr = method.getChildren(Kind.EXPR);
         for (JmmNode expr : list_expr) {
@@ -126,6 +94,23 @@ public class UndeclaredVariable extends AnalysisVisitor {
                         );
                     }
                 }
+            }
+        }
+
+        if (!Objects.equals(currentMethod, "main")) {
+            JmmNode return_expr = method.getChildren(Kind.EXPR).getFirst();
+            Type return_type = TypeUtils.getExprType(return_expr, table);
+            Type function_type = TypeUtils.convertType(method.getChildren(Kind.TYPE).getFirst());
+
+            if (!Objects.equals(return_type, function_type)) {
+                var message = "Return function type is " + function_type + ", not " + return_type;
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        method.getLine(),
+                        method.getColumn(),
+                        message,
+                        null)
+                );
             }
         }
 
