@@ -49,7 +49,7 @@ public class OurTest {
     @Test
     public void returnTest4() {
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_15.jmm"));
-        TestUtils.mustFail(result);
+         TestUtils.mustFail(result);
     }
 
     @Test
@@ -160,6 +160,48 @@ public class OurTest {
     @Test
     public void arrayTest3() {
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_21.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    //This tests
+    @Test
+    public void thisTest1() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/This_test1.jmm"));
+        TestUtils.noErrors(result);
+    }
+    @Test
+    public void thisTest2() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/This_test2.jmm"));
+        TestUtils.noErrors(result);
+    }
+    @Test
+    public void thisTest3() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/This_test3.jmm"));
+        TestUtils.noErrors(result);
+    }
+    @Test
+    public void thisTest4() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/This_test4.jmm"));
+        TestUtils.noErrors(result);
+    }
+    @Test
+    public void thisTest5() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/This_test5.jmm"));
+        TestUtils.noErrors(result);
+    }
+    @Test
+    public void thisTest6() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/This_test6.jmm"));
+        TestUtils.noErrors(result);
+    }
+    @Test
+    public void thisTest7() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/This_test7.jmm"));
+        TestUtils.mustFail(result);
+    }
+    @Test
+    public void thisTest8() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/This_test8.jmm"));
         TestUtils.noErrors(result);
     }
 
