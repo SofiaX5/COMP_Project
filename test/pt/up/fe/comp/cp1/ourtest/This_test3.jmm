@@ -1,0 +1,8 @@
+// Assigning 'this' to a variable of the same class type
+class Test3 {
+    public Test3 getSelf() {
+        Test3 t;
+        t = this;
+        return t;
+    }
+}

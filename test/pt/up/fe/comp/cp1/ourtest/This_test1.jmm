@@ -1,0 +1,7 @@
+// Basic usage of 'this'
+class Test1 {
+    int value;
+    public int getValueViaThis() {
+        return this.value;
+    }
+}

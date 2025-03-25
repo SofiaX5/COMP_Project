@@ -1,0 +1,10 @@
+// Using 'this' to call another method in the same class
+class Test2 {
+    int x;
+    public int getValue() {
+        return 42;
+    }
+    public int getValueUsingThis() {
+        return this.getValue();
+    }
+}

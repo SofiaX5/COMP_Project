@@ -1,0 +1,7 @@
+// Using 'this' in constructor-like scenario
+class Test4 {
+    int value;
+    public void initValue(int val) {
+        this.value = val;
+    }
+}
