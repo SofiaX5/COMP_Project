@@ -37,12 +37,14 @@ public class UndeclaredVariable extends AnalysisVisitor {
         currentMethod = method.get("name");
 
         List<JmmNode> list_stmt = method.getChildren(Kind.STMT);
+        List<JmmNode> list_stmt_expr  = new java.util.ArrayList<>(List.of());
         for (JmmNode stmt : list_stmt) {
             var kind = stmt.getKind();
             List<JmmNode> exprs = stmt.getChildren(Kind.EXPR);
+            list_stmt_expr.addAll(exprs);
             if (Objects.equals(kind, "IfStmt")) {
                 var expr = exprs.getFirst();
-                if (!Objects.equals(TypeUtils.getExprType(expr, table), new Type("Boolean", false))) {
+                if (!Objects.equals(TypeUtils.getExprType(expr, table), new Type("boolean", false))) {
                     var message = "If condition is not of type Boolean.";
                     addReport(Report.newError(
                             Stage.SEMANTIC,
@@ -55,33 +57,20 @@ public class UndeclaredVariable extends AnalysisVisitor {
             }
         }
 
-        List<JmmNode> list_expr = method.getChildren(Kind.EXPR);
+
+        List<JmmNode> list_expr = new java.util.ArrayList<>(List.of());
+        List<JmmNode> list_method_expr = method.getChildren(Kind.EXPR);
+        list_expr.addAll(list_stmt_expr);
+        list_expr.addAll(list_method_expr);
         for (JmmNode expr : list_expr) {
             List<JmmNode> babies_expr = expr.getChildren(Kind.EXPR);
             if (expr.hasAttribute("op")) {
                 var op = expr.get("op");
                 var op1 = babies_expr.getFirst();
                 var op2 = babies_expr.get(1);
-                if (op.equals("+")||op.equals(">")) {
-                    if ((Objects.equals(TypeUtils.getExprType(op1,  table), new Type("String", false)) &&
-                            Objects.equals(TypeUtils.getExprType(op2, table), new Type("String", false))) ||
-                            Objects.equals(TypeUtils.getExprType(op1,table), new Type("Int", false)) &&
-                            Objects.equals(TypeUtils.getExprType(op2,table), new Type("Int", false))) {
-                        return null;
-                    } else {
-                        var message = String.format("Operands type are not adequate for the operation %s.", op);
-                        addReport(Report.newError(
-                                Stage.SEMANTIC,
-                                method.getLine(),
-                                method.getColumn(),
-                                message,
-                                null)
-                        );
-                    }
-
-                } else if (op.equals("-")||op.equals("*")||op.equals("/")) {
-                    if (Objects.equals(TypeUtils.getExprType(op1, table), new Type("Int", false)) &&
-                        Objects.equals(TypeUtils.getExprType(op2, table), new Type("Int", false))) {
+                if (op.equals("+")||op.equals("<")||op.equals("-")||op.equals("*")||op.equals("/")) {
+                    if (Objects.equals(TypeUtils.getExprType(op1,table), new Type("int", false)) &&
+                            Objects.equals(TypeUtils.getExprType(op2,table), new Type("int", false))) {
                         return null;
                     } else {
                         var message = String.format("Operands type are not adequate for the operation %s.", op);

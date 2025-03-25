@@ -78,7 +78,6 @@ stmt
     | WHILE '(' expr ')' stmt                  #WhileStmt
     | expr ';'                                 #ExprStmt
     | expr '=' expr ';'                        #AssignStmt
-    | RETURN expr ';'                          #ReturnStmt
     | expr '[' expr ']' '=' expr ';'           #ArrayAssignStmt
     ;
 

@@ -154,6 +154,18 @@ public class OurTest {
         TestUtils.mustFail(result);
     }
 
+    @Test
+    public void ifTest10() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_26.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void ifTest11() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_27.jmm"));
+        TestUtils.mustFail(result);
+    }
+
 
 
 
@@ -176,6 +188,23 @@ public class OurTest {
     }
 
 
+    @Test
+    public void assignTest1() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_24.jmm"));
+        TestUtils.mustFail(result);
+    }
+
+    @Test
+    public void assignTest2() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_25.jmm"));
+        TestUtils.noErrors(result);
+    }
+
+    @Test
+    public void assignTest3() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_28.jmm"));
+        TestUtils.mustFail(result);
+    }
 
 
 

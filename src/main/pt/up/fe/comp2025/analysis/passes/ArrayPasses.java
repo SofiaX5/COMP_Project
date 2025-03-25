@@ -116,7 +116,7 @@ public class ArrayPasses extends AnalysisVisitor {
         JmmNode sizeExpr = node.getChildren().getFirst();
         Type sizeType = TypeUtils.getExprType(sizeExpr,table);
 
-        if ((!sizeType.getName().equals("Int") && !sizeType.getName().equals("int")) || sizeType.isArray()) {
+        if ((!sizeType.getName().equals("int") && !sizeType.getName().equals("int")) || sizeType.isArray()) {
             var message = "Array size must be an integer expression";
             addReport(Report.newError(
                     Stage.SEMANTIC,
@@ -150,7 +150,7 @@ public class ArrayPasses extends AnalysisVisitor {
             }
 
             Type indexType = TypeUtils.getExprType(indexExpr,table);
-            if ((!Objects.equals(indexType.getName(), "int") && !Objects.equals(indexType.getName(), "Int")) || indexType.isArray()) {
+            if ((!Objects.equals(indexType.getName(), "int") && !Objects.equals(indexType.getName(), "int")) || indexType.isArray()) {
                 var message = "Array index must be an integer expression";
                 addReport(Report.newError(
                         Stage.SEMANTIC,
