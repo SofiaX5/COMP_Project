@@ -89,7 +89,7 @@ public class UndeclaredVariable extends AnalysisVisitor {
 
             if (Objects.equals(expr.getKind(), "MethodCallExpr")) {
                 List<Symbol> params = table.getParameters(expr.get("name"));
-                if (!(params == null)) {
+                if (!(params == null) && !params.isEmpty() && !Objects.equals(params.getFirst().getType(), new Type("vararg", true))) {
                     for (int i = 0; i < params.size(); i++) {
                         if (!Objects.equals(TypeUtils.getExprType(babies_expr.get(i + 1), table), params.get(i).getType())) {
                             var message = "Parameter type don't match.";
@@ -112,14 +112,27 @@ public class UndeclaredVariable extends AnalysisVisitor {
             Type function_type = TypeUtils.convertType(method.getChildren(Kind.TYPE).getFirst());
 
             if (!Objects.equals(return_type, function_type)) {
-                var message = "Return function type is " + function_type + ", not " + return_type;
-                addReport(Report.newError(
-                        Stage.SEMANTIC,
-                        method.getLine(),
-                        method.getColumn(),
-                        message,
-                        null)
-                );
+                if (!Objects.equals(return_type, new Type("vararg", false))) {
+                    var message = "Return function type is " + function_type + ", not " + return_type;
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            method.getLine(),
+                            method.getColumn(),
+                            message,
+                            null)
+                    );
+                } else {
+                    if (!Objects.equals(function_type, new Type("int", false))) {
+                        var message = "Return function type is " + function_type + ", not " + return_type;
+                        addReport(Report.newError(
+                                Stage.SEMANTIC,
+                                method.getLine(),
+                                method.getColumn(),
+                                message,
+                                null)
+                        );
+                    }
+                }
             }
         }
 
