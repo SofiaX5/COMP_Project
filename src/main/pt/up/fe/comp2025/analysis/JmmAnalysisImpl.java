@@ -33,7 +33,8 @@ public class JmmAnalysisImpl implements JmmAnalysis {
                 new UndeclaredVariable(table),
                 new ArrayPasses(table),
                 new VarargPasses(table),
-                new UndeclaredPasses(table)
+                new UndeclaredPasses(table),
+                new StmtPasses(table)
         );
     }
 

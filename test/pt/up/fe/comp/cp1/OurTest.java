@@ -11,6 +11,7 @@ public class OurTest {
     private static final String STATEMENT = "stmt";
     private static final String EXPRESSION = "expr";
 
+    // Geral
     @Test
     public void testAttribution() {
         TestUtils.noErrors(TestUtils.parse("class A {int foo(){int a; a = 3; return 0;}}"));
@@ -24,6 +25,16 @@ public class OurTest {
     @Test
     public void testMainVariable() {
         TestUtils.noErrors(TestUtils.parse("class A {int main;}"));
+    }
+
+    @Test
+    public void testStmtSemiColon() {
+        TestUtils.mustFail(TestUtils.parse("class A {int a () {int a; 3; return a;} }"));
+    }
+
+    @Test
+    public void testStmtSemiColon2() {
+        TestUtils.mustFail(TestUtils.parse("class A {int a () {int a; a; return a;} }"));
     }
 
 
@@ -83,8 +94,7 @@ public class OurTest {
     }
 
 
-
-
+    // void
     @Test
     public void voidTest1() {
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_3.jmm"));
@@ -98,8 +108,7 @@ public class OurTest {
     }
 
 
-
-
+    // If
     @Test
     public void ifTest1() {
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_5.jmm"));
@@ -167,8 +176,7 @@ public class OurTest {
     }
 
 
-
-
+    // Array
     @Test
     public void arrayTest1() {
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_19.jmm"));
@@ -186,6 +194,14 @@ public class OurTest {
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_21.jmm"));
         TestUtils.noErrors(result);
     }
+
+
+    // Import
+    @Test
+    public void importTest1() {
+        TestUtils.mustFail(TestUtils.parse("import a; import a; class A {}"));
+    }
+
 
     //This tests
     @Test
@@ -230,6 +246,7 @@ public class OurTest {
     }
 
 
+    // Assignments
     @Test
     public void assignTest1() {
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_24.jmm"));
@@ -249,9 +266,7 @@ public class OurTest {
     }
 
 
-
     // NÃO É PARA FAZER
     // int a = 3;
     // -1
-
 }
