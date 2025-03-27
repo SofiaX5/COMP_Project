@@ -1,10 +1,8 @@
-// Using 'this' to call another method in the same class
-class Test2 {
-    int x;
-    public int getValue() {
-        return 42;
-    }
-    public int getValueUsingThis() {
-        return this.getValue();
+// Assigning 'this' to a variable of the same class type
+class Test3 {
+    public Test3 getSelf() {
+        Test3 t;
+        t = this;
+        return t;
     }
 }

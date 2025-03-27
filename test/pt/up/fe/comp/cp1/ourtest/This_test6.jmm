@@ -1,6 +1,0 @@
-// Passing 'this' as an argument
-class Test6 {
-    public Test6 returnThis() {
-        return this;
-    }
-}

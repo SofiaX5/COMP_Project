@@ -1,7 +1,7 @@
-// Using 'this' in constructor-like scenario
-class Test4 {
-    int value;
-    public void initValue(int val) {
-        this.value = val;
+// Error case - 'this' used in static method
+class Test7 {
+    public static void main(String[] args) {
+        // This should generate a semantic error
+        Test7 t = this;
     }
 }

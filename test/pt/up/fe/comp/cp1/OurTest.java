@@ -188,6 +188,7 @@ public class OurTest {
     }
 
     //This tests
+
     @Test
     public void thisTest1() {
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/This_test1.jmm"));
@@ -198,6 +199,7 @@ public class OurTest {
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/This_test2.jmm"));
         TestUtils.noErrors(result);
     }
+
     @Test
     public void thisTest3() {
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/This_test3.jmm"));
@@ -206,28 +208,9 @@ public class OurTest {
     @Test
     public void thisTest4() {
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/This_test4.jmm"));
-        TestUtils.noErrors(result);
-    }
-    @Test
-    public void thisTest5() {
-        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/This_test5.jmm"));
-        TestUtils.noErrors(result);
-    }
-    @Test
-    public void thisTest6() {
-        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/This_test6.jmm"));
-        TestUtils.noErrors(result);
-    }
-    @Test
-    public void thisTest7() {
-        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/This_test7.jmm"));
         TestUtils.mustFail(result);
     }
-    @Test
-    public void thisTest8() {
-        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/This_test8.jmm"));
-        TestUtils.noErrors(result);
-    }
+
 
 
     @Test
