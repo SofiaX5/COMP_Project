@@ -37,7 +37,8 @@ public enum Kind {
     BINARY_EXPR,
     THIS_EXPR,
     INTEGER_LITERAL,
-    VAR_REF_EXPR;
+    VAR_REF_EXPR,
+    NEW_OBJECT_EXPR;
 
 
     private final String name;

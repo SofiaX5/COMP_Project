@@ -33,6 +33,7 @@ public class UndeclaredVariable extends AnalysisVisitor {
         addVisit(Kind.METHOD_DECL, this::visitMethodDecl);
         addVisit(Kind.VAR_REF_EXPR, this::visitVarRefExpr);
         addVisit(Kind.ASSIGN_STMT, this::visitAssignStmt);
+        addVisit(Kind.NEW_OBJECT_EXPR, this::visitNewObjectExpr);
     }
 
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
@@ -48,6 +49,19 @@ public class UndeclaredVariable extends AnalysisVisitor {
                 var expr = exprs.getFirst();
                 if (!Objects.equals(TypeUtils.getExprType(expr, table), new Type("boolean", false))) {
                     var message = "If condition is not of type Boolean.";
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            method.getLine(),
+                            method.getColumn(),
+                            message,
+                            null)
+                    );
+                }
+            } else if (Objects.equals(kind, "ExprStmt")) {
+
+                var exprStmt = exprs.getFirst();
+                if (!Objects.equals(exprStmt.getKind(), "MethodCallExpr")) {
+                    var message = "ExprStmt is not of type MethodCallExpr.";
                     addReport(Report.newError(
                             Stage.SEMANTIC,
                             method.getLine(),
@@ -103,6 +117,10 @@ public class UndeclaredVariable extends AnalysisVisitor {
                         }
                     }
                 }
+            }
+
+            if (Objects.equals(expr.getKind(), "VarRefExpr")) {
+
             }
         }
 
@@ -181,6 +199,35 @@ public class UndeclaredVariable extends AnalysisVisitor {
 
         return null;
     }
+
+    private Void visitNewObjectExpr(JmmNode newObjExpr, SymbolTable table) {
+        SpecsCheck.checkNotNull(currentMethod, () -> "Expected current method to be set");
+
+        var newObjExprName = newObjExpr.get("name");
+
+        // Import is a declared variable, return
+        if (table.getImports().stream()
+                .anyMatch(import_ -> import_.equals(newObjExprName))) {
+            return null;
+        }
+
+        if (Objects.equals(table.getClassName(), newObjExpr.get("name"))) {
+            return null;
+        }
+
+        // Create error report
+        var message = String.format("Variable '%s' does not exist.", newObjExprName);
+        addReport(Report.newError(
+                Stage.SEMANTIC,
+                newObjExpr.getLine(),
+                newObjExpr.getColumn(),
+                message,
+                null)
+        );
+
+        return null;
+    }
+
 
     // Tests ObjectAssignmentFail and ObjectAssignmentPassImports  are not compatible
     // ObjectAssignmentPassImports has a comment that we can assigned 2 different objects

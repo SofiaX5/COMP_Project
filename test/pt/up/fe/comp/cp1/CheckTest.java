@@ -8,12 +8,19 @@ public class CheckTest {
     // 3.1.1
     @Test
     public void testUndefinedVariable() {
-        TestUtils.mustFail(TestUtils.parse("class A {int foo(){return x;}}"));
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_31.jmm"));
+        TestUtils.mustFail(result);
     }
 
     @Test
     public void testDefinedLocalVariable() {
         TestUtils.noErrors(TestUtils.parse("class A {int foo(){int x; x = 5; return x;}}"));
+    }
+
+    @Test
+    public void testUndefinedLocalVariable() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_32.jmm"));
+        TestUtils.mustFail(result);
     }
 
     @Test
@@ -23,7 +30,8 @@ public class CheckTest {
 
     @Test
     public void testUndefinedImportedClass() {
-        TestUtils.mustFail(TestUtils.parse("class A {B foo(){return new B();}}"));
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_33.jmm"));
+        TestUtils.mustFail(result);
     }
 
     @Test
@@ -50,7 +58,8 @@ public class CheckTest {
 
     @Test
     public void testArrayArithmeticWithScalar() {
-        TestUtils.mustFail(TestUtils.parse("class A {int[] foo(){int[] a; return a * 2;}}"));
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_34.jmm"));
+        TestUtils.mustFail(result);
     }
 
     @Test

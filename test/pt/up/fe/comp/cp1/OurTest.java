@@ -29,12 +29,14 @@ public class OurTest {
 
     @Test
     public void testStmtSemiColon() {
-        TestUtils.mustFail(TestUtils.parse("class A {int a () {int a; 3; return a;} }"));
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_29.jmm"));
+        TestUtils.mustFail(result);
     }
 
     @Test
     public void testStmtSemiColon2() {
-        TestUtils.mustFail(TestUtils.parse("class A {int a () {int a; a; return a;} }"));
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_30.jmm"));
+        TestUtils.mustFail(result);
     }
 
 
