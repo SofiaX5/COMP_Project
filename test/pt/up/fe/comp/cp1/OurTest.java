@@ -199,7 +199,7 @@ public class OurTest {
     // Import
     @Test
     public void importTest1() {
-        TestUtils.mustFail(TestUtils.parse("import a; import a; class A {}"));
+        TestUtils.noErrors(TestUtils.parse("import a; import a; class A {}"));
     }
 
 

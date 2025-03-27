@@ -33,7 +33,11 @@ public class StmtPasses extends AnalysisVisitor {
                 JmmNode baby1 = babies_expr.getFirst();
                 JmmNode baby2 = babies_expr.get(1);
 
-                if (!Objects.equals(TypeUtils.getExprType(baby1, table),TypeUtils.getExprType(baby2, table)) ) {
+                String typeBaby1 = TypeUtils.getExprType(baby1, table).getName();
+                String typeBaby2 = TypeUtils.getExprType(baby1, table).getName();
+
+                if (!UndeclaredVariable.isTypeImported(typeBaby1, table) && !UndeclaredVariable.isTypeImported(typeBaby2, table)
+                        && !Objects.equals(TypeUtils.getExprType(baby1, table),TypeUtils.getExprType(baby2, table)) ) {
                     var message = "Assignment types not matching:" + TypeUtils.getExprType(baby1, table) + " and " + TypeUtils.getExprType(baby2, table);
                     addReport(Report.newError(
                             Stage.SEMANTIC,

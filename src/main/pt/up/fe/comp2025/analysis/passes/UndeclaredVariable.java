@@ -1,5 +1,6 @@
 package pt.up.fe.comp2025.analysis.passes;
 
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
@@ -8,6 +9,7 @@ import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.comp2025.analysis.AnalysisVisitor;
 import pt.up.fe.comp2025.ast.Kind;
 import pt.up.fe.comp2025.ast.TypeUtils;
+import pt.up.fe.comp2025.symboltable.JmmSymbolTable;
 import pt.up.fe.specs.util.SpecsCheck;
 
 import java.util.List;
@@ -81,6 +83,24 @@ public class UndeclaredVariable extends AnalysisVisitor {
                                 message,
                                 null)
                         );
+                    }
+                }
+            }
+
+            if (Objects.equals(expr.getKind(), "MethodCallExpr")) {
+                List<Symbol> params = table.getParameters(expr.get("name"));
+                if (!(params == null)) {
+                    for (int i = 0; i < params.size(); i++) {
+                        if (!Objects.equals(TypeUtils.getExprType(babies_expr.get(i + 1), table), params.get(i).getType())) {
+                            var message = "Parameter type don't match.";
+                            addReport(Report.newError(
+                                    Stage.SEMANTIC,
+                                    method.getLine(),
+                                    method.getColumn(),
+                                    message,
+                                    null)
+                            );
+                        }
                     }
                 }
             }
@@ -195,7 +215,7 @@ public class UndeclaredVariable extends AnalysisVisitor {
         return null;
     }
 
-    private boolean isTypeImported(String typeName, SymbolTable table) {
+    public static boolean isTypeImported(String typeName, SymbolTable table) {
         for (String importName : table.getImports()) {
             if (importName.endsWith("." + typeName) || importName.equals(typeName)) {
                 return true;
