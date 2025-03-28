@@ -217,6 +217,16 @@ public class UndeclaredVariable extends AnalysisVisitor {
             }
         }
 
+        if (table.getReturnType(currentMethod) == null) {
+            for (Symbol field : table.getFields()) {
+                if (method.getDescendants("VarAccess").stream()
+                        .anyMatch(var -> var.get("name").equals(field.getName()))) {
+                    addReport(Report.newError(Stage.SEMANTIC, method.getLine(), method.getColumn(),
+                            "Cannot access instance field '" + field.getName() + "' in a static method.", null));
+                }
+            }
+        }
+
         return null;
     }
 
