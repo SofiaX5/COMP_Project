@@ -107,6 +107,7 @@ public class UndeclaredVariable extends AnalysisVisitor {
         Set<String> fieldNames = new HashSet<>();
         Set<String> importedClassNames = new HashSet<>();
         Set<String> methodNames = new HashSet<>();
+        Set<String> uniqueImports = new HashSet<>();
 
         for (Symbol field : table.getFields()) {
             if (!fieldNames.add(field.getName())) {
@@ -120,11 +121,17 @@ public class UndeclaredVariable extends AnalysisVisitor {
         }
 
         for (String importName : table.getImports()) {
+            uniqueImports.add(importName.trim());
+        }
+
+        for (String importName : uniqueImports) {
             String[] importList = importName.split(",");
 
             for (String importItem : importList) {
                 String trimmedImport = importItem.trim();
-                String className = trimmedImport.contains(".") ? trimmedImport.substring(trimmedImport.lastIndexOf('.') + 1) : trimmedImport;
+                String className = trimmedImport.contains(".")
+                        ? trimmedImport.substring(trimmedImport.lastIndexOf('.') + 1)
+                        : trimmedImport;
 
                 if (!importedClassNames.add(className)) {
                     addReport(Report.newError(Stage.SEMANTIC, classDecl.getLine(), classDecl.getColumn(),
@@ -132,6 +139,7 @@ public class UndeclaredVariable extends AnalysisVisitor {
                 }
             }
         }
+
 
         for (String methodName : table.getMethods()) {
             if (!methodNames.add(methodName)) {
