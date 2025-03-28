@@ -41,7 +41,7 @@ public class UndeclaredVariable extends AnalysisVisitor {
 
     private Void visitClassDecl(JmmNode classDecl, SymbolTable table) {
         Set<String> fieldNames = new HashSet<>();
-        Set<String> importNames = new HashSet<>();
+        Set<String> importedClassNames = new HashSet<>();
         Set<String> methodNames = new HashSet<>();
 
         for (Symbol field : table.getFields()) {
@@ -52,9 +52,16 @@ public class UndeclaredVariable extends AnalysisVisitor {
         }
 
         for (String importName : table.getImports()) {
-            if (!importNames.add(importName)) {
-                addReport(Report.newError(Stage.SEMANTIC, classDecl.getLine(), classDecl.getColumn(),
-                        "Duplicated import: " + importName, null));
+            String[] importList = importName.split(",");
+
+            for (String importItem : importList) {
+                String trimmedImport = importItem.trim();
+                String className = trimmedImport.contains(".") ? trimmedImport.substring(trimmedImport.lastIndexOf('.') + 1) : trimmedImport;
+
+                if (!importedClassNames.add(className)) {
+                    addReport(Report.newError(Stage.SEMANTIC, classDecl.getLine(), classDecl.getColumn(),
+                            "Duplicated imported class: " + className, null));
+                }
             }
         }
 
