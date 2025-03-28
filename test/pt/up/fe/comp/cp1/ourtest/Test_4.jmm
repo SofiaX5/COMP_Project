@@ -1,0 +1,7 @@
+class hello {
+    public void b() {
+        int a;
+        a = 0;
+        return a;
+    }
+}

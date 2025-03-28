@@ -85,6 +85,7 @@ public class SymbolTableTest {
         var checkAll = 0;
 
         for (var m : methods) {
+            System.out.println("M: " + m);
             var ret = st.getReturnType(m);
             var numParameters = st.getParameters(m).size();
             switch (ret.getName()) {

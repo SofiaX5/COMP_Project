@@ -65,7 +65,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         // code to compute self
         // statement has type of lhs
         var left = node.getChild(0);
-        Type thisType = types.getExprType(left);
+        Type thisType = types.getExprType(left,table);
         String typeString = ollirTypes.toOllirType(thisType);
         var varCode = left.get("name") + typeString;
 

@@ -1,0 +1,6 @@
+class a {
+    int a() {
+        String b;
+        return b;
+    }
+}

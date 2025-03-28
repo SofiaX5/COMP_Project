@@ -1,0 +1,10 @@
+class a {
+    public static void main(String[] args) {
+        String c;
+        if (c) {
+
+        } else {
+
+        }
+    }
+}

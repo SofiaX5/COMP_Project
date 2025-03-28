@@ -15,18 +15,30 @@ import java.util.Set;
  */
 public enum Kind {
     PROGRAM,
+    IMPORT_DECL,
     CLASS_DECL,
     VAR_DECL,
     TYPE,
     METHOD_DECL,
+    METHOD_CALL,
+    FIELD_DECL,
     PARAM,
     STMT,
+    ARRAY_EXPR,
+    ARRAY_ASSIGN_STMT,
+    ARRAY_ELEM_EXPR,
+    WHILE_STMT,
+    IF_STMT,
+    NEW_ARRAY_EXPR,
+    METHOD_CALL_EXPR,
     ASSIGN_STMT,
     RETURN_STMT,
     EXPR,
     BINARY_EXPR,
+    THIS_EXPR,
     INTEGER_LITERAL,
-    VAR_REF_EXPR;
+    VAR_REF_EXPR,
+    NEW_OBJECT_EXPR;
 
 
     private final String name;

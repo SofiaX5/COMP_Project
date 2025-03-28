@@ -12,28 +12,36 @@ import java.util.stream.Collectors;
 public class JmmSymbolTable extends AJmmSymbolTable {
 
     private final String className;
+    private final String superClass;
     private final List<String> methods;
     private final Map<String, Type> returnTypes;
     private final Map<String, List<Symbol>> params;
     private final Map<String, List<Symbol>> locals;
+    private final List<String> imports;
+    private final List<Symbol> fields;
 
 
-    public JmmSymbolTable(String className,
+    public JmmSymbolTable(String className, String superClass,
                           List<String> methods,
                           Map<String, Type> returnTypes,
                           Map<String, List<Symbol>> params,
-                          Map<String, List<Symbol>> locals) {
+                          Map<String, List<Symbol>> locals,
+                          List<String> imports,
+                          List<Symbol> fields) {
 
         this.className = className;
+        this.superClass = superClass;
         this.methods = methods;
         this.returnTypes = returnTypes;
         this.params = params;
         this.locals = locals;
+        this.imports = imports;
+        this.fields = fields;
     }
 
     @Override
     public List<String> getImports() {
-        throw new NotImplementedException();
+        return imports;
     }
 
     @Override
@@ -43,31 +51,26 @@ public class JmmSymbolTable extends AJmmSymbolTable {
 
     @Override
     public String getSuper() {
-        throw new NotImplementedException();
+        return superClass;
     }
 
     @Override
     public List<Symbol> getFields() {
-        throw new NotImplementedException();
+        return fields;
     }
-
 
     @Override
     public List<String> getMethods() {
         return methods;
     }
 
-
     @Override
     public Type getReturnType(String methodSignature) {
-        // TODO: Simple implementation that needs to be expanded
-        return TypeUtils.newIntType();
+        return returnTypes.get(methodSignature);
     }
 
     @Override
-    public List<Symbol> getParameters(String methodSignature) {
-        return params.get(methodSignature);
-    }
+    public List<Symbol> getParameters(String methodSignature) { return params.get(methodSignature); }
 
     @Override
     public List<Symbol> getLocalVariables(String methodSignature) {
@@ -78,6 +81,5 @@ public class JmmSymbolTable extends AJmmSymbolTable {
     public String toString() {
         return print();
     }
-
 
 }

@@ -1,0 +1,8 @@
+class ArrayAccessOnInt {
+    public String foo() {
+        int a;
+        a = 0;
+
+        return a;
+    }
+}
