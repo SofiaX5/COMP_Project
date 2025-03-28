@@ -229,6 +229,13 @@ public class OurTest {
         TestUtils.mustFail(result);
     }
 
+    @Test
+    public void thisTest5() {
+        var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_35.jmm"));
+        System.out.println(result.getReports());
+        TestUtils.mustFail(result);
+    }
+
 
 
     // Assignments
@@ -249,6 +256,7 @@ public class OurTest {
         var result = TestUtils.analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/ourtest/Test_28.jmm"));
         TestUtils.mustFail(result);
     }
+
 
 
     // NÃO É PARA FAZER
