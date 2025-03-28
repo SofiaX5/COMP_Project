@@ -139,17 +139,20 @@ public class UndeclaredVariable extends AnalysisVisitor {
             } else if (Objects.equals(expr.getKind(), "LengthExpr")) {
                 JmmNode length_string = babies_expr.getFirst();
                 JmmNode length = babies_expr.get(1);
-                    if (!Objects.equals(TypeUtils.getExprType(length_string, table), new Type("String", false))
-                    || !Objects.equals(length.get("name"),  "length")) {
-                        var message = "Invalid length expression.";
-                        addReport(Report.newError(
-                                Stage.SEMANTIC,
-                                method.getLine(),
-                                method.getColumn(),
-                                message,
-                                null)
-                        );
-                    }
+
+
+                if ((!Objects.equals(TypeUtils.getExprType(length_string, table), new Type("String", false))
+                && !Objects.equals(TypeUtils.getExprType(length_string, table), new Type("int", true)))
+                || !Objects.equals(length.get("name"),  "length")) {
+                    var message = "Invalid length expression.";
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            method.getLine(),
+                            method.getColumn(),
+                            message,
+                            null)
+                    );
+                }
             }
 
             if (Objects.equals(currentMethod, "main") && Objects.equals(expr.getKind(), "ThisExpr")) {
@@ -224,6 +227,10 @@ public class UndeclaredVariable extends AnalysisVisitor {
         // Import is a declared variable, return
         if (table.getImports().stream()
                 .anyMatch(import_ -> import_.equals(varRefName))) {
+            return null;
+        }
+
+        if (Objects.equals(varRefName, "length")) {
             return null;
         }
 
