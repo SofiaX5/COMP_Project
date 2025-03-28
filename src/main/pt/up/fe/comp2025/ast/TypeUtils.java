@@ -138,7 +138,7 @@ public class TypeUtils {
                     }
                 }
 
-                return new Type("int", false);
+                return new Type(varName, false);
 
             case "ThisExpr":
                 return new Type(symbolTable.getClassName(), false);
