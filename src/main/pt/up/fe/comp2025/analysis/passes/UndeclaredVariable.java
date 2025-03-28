@@ -36,6 +36,36 @@ public class UndeclaredVariable extends AnalysisVisitor {
         addVisit(Kind.VAR_REF_EXPR, this::visitVarRefExpr);
         addVisit(Kind.ASSIGN_STMT, this::visitAssignStmt);
         addVisit(Kind.NEW_OBJECT_EXPR, this::visitNewObjectExpr);
+        addVisit(Kind.CLASS_DECL, this::visitClassDecl);
+    }
+
+    private Void visitClassDecl(JmmNode classDecl, SymbolTable table) {
+        Set<String> fieldNames = new HashSet<>();
+        Set<String> importNames = new HashSet<>();
+        Set<String> methodNames = new HashSet<>();
+
+        for (Symbol field : table.getFields()) {
+            if (!fieldNames.add(field.getName())) {
+                addReport(Report.newError(Stage.SEMANTIC, classDecl.getLine(), classDecl.getColumn(),
+                        "Duplicated field declaration: " + field.getName(), null));
+            }
+        }
+
+        for (String importName : table.getImports()) {
+            if (!importNames.add(importName)) {
+                addReport(Report.newError(Stage.SEMANTIC, classDecl.getLine(), classDecl.getColumn(),
+                        "Duplicated import: " + importName, null));
+            }
+        }
+
+        for (String methodName : table.getMethods()) {
+            if (!methodNames.add(methodName)) {
+                addReport(Report.newError(Stage.SEMANTIC, classDecl.getLine(), classDecl.getColumn(),
+                        "Duplicate method declaration: " + methodName, null));
+            }
+        }
+
+        return null;
     }
 
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
@@ -47,14 +77,14 @@ public class UndeclaredVariable extends AnalysisVisitor {
         for (Symbol param : table.getParameters(currentMethod)) {
             if (!paramNames.add(param.getName())) {
                 addReport(Report.newError(Stage.SEMANTIC, method.getLine(), method.getColumn(),
-                        "Duplicate parameter: " + param.getName(), null));
+                        "Duplicated parameter: " + param.getName(), null));
             }
         }
 
         for (Symbol localVar : table.getLocalVariables(currentMethod)) {
             if (!localVarNames.add(localVar.getName())) {
                 addReport(Report.newError(Stage.SEMANTIC, method.getLine(), method.getColumn(),
-                        "Duplicate local variable: " + localVar.getName(), null));
+                        "Duplicated local variable: " + localVar.getName(), null));
             }
         }
 
