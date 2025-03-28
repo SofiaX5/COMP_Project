@@ -12,8 +12,10 @@ import pt.up.fe.comp2025.ast.TypeUtils;
 import pt.up.fe.comp2025.symboltable.JmmSymbolTable;
 import pt.up.fe.specs.util.SpecsCheck;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Checks if the type of the expression in a return statement is compatible with the method return type.
@@ -38,6 +40,23 @@ public class UndeclaredVariable extends AnalysisVisitor {
 
     private Void visitMethodDecl(JmmNode method, SymbolTable table) {
         currentMethod = method.get("name");
+
+        Set<String> paramNames = new HashSet<>();
+        Set<String> localVarNames = new HashSet<>();
+
+        for (Symbol param : table.getParameters(currentMethod)) {
+            if (!paramNames.add(param.getName())) {
+                addReport(Report.newError(Stage.SEMANTIC, method.getLine(), method.getColumn(),
+                        "Duplicate parameter: " + param.getName(), null));
+            }
+        }
+
+        for (Symbol localVar : table.getLocalVariables(currentMethod)) {
+            if (!localVarNames.add(localVar.getName())) {
+                addReport(Report.newError(Stage.SEMANTIC, method.getLine(), method.getColumn(),
+                        "Duplicate local variable: " + localVar.getName(), null));
+            }
+        }
 
         List<JmmNode> list_stmt = method.getChildren(Kind.STMT);
         List<JmmNode> list_stmt_expr  = new java.util.ArrayList<>(List.of());
