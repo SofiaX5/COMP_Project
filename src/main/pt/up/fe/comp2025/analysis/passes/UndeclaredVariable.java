@@ -37,6 +37,70 @@ public class UndeclaredVariable extends AnalysisVisitor {
         addVisit(Kind.ASSIGN_STMT, this::visitAssignStmt);
         addVisit(Kind.NEW_OBJECT_EXPR, this::visitNewObjectExpr);
         addVisit(Kind.CLASS_DECL, this::visitClassDecl);
+        addVisit(Kind.BINARY_EXPR, this::visitBinaryExpr);
+    }
+
+    private Void visitBinaryExpr(JmmNode binaryExpr, SymbolTable table) {
+        if (!binaryExpr.hasAttribute("op") || binaryExpr.getChildren(Kind.EXPR).size() < 2) {
+            return null;
+        }
+
+        String op = binaryExpr.get("op");
+        List<JmmNode> operands = binaryExpr.getChildren(Kind.EXPR);
+
+        if (op.matches("[+\\-*/]")) {
+            Type op1Type = TypeUtils.getExprType(operands.get(0), table);
+            Type op2Type = TypeUtils.getExprType(operands.get(1), table);
+
+            if (op1Type == null || op2Type == null ||
+                    !op1Type.getName().equals("int") ||
+                    !op2Type.getName().equals("int")) {
+                var message = String.format("Arithmetic operation '%s' requires integer operands.", op);
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        binaryExpr.getLine(),
+                        binaryExpr.getColumn(),
+                        message,
+                        null)
+                );
+            }
+        }
+        else if (op.equals("<")) {
+            Type op1Type = TypeUtils.getExprType(operands.get(0), table);
+            Type op2Type = TypeUtils.getExprType(operands.get(1), table);
+
+            if (op1Type == null || op2Type == null ||
+                    !op1Type.getName().equals("int") ||
+                    !op2Type.getName().equals("int")) {
+                var message = "Comparison operation '<' requires integer operands.";
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        binaryExpr.getLine(),
+                        binaryExpr.getColumn(),
+                        message,
+                        null)
+                );
+            }
+        }
+        else if (op.equals("&&")) {
+            Type op1Type = TypeUtils.getExprType(operands.get(0), table);
+            Type op2Type = TypeUtils.getExprType(operands.get(1), table);
+
+            if (op1Type == null || op2Type == null ||
+                    !op1Type.getName().equals("boolean") ||
+                    !op2Type.getName().equals("boolean")) {
+                var message = "Logical AND operation '&&' requires boolean operands.";
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        binaryExpr.getLine(),
+                        binaryExpr.getColumn(),
+                        message,
+                        null)
+                );
+            }
+        }
+
+        return null;
     }
 
     private Void visitClassDecl(JmmNode classDecl, SymbolTable table) {
