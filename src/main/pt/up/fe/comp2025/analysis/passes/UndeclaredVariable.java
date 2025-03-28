@@ -113,6 +113,10 @@ public class UndeclaredVariable extends AnalysisVisitor {
                 addReport(Report.newError(Stage.SEMANTIC, classDecl.getLine(), classDecl.getColumn(),
                         "Duplicated field declaration: " + field.getName(), null));
             }
+            if (Objects.equals(field.getType().getName(), "vararg")) {
+                addReport(Report.newError(Stage.SEMANTIC, classDecl.getLine(), classDecl.getColumn(),
+                        "Vararg variable is not a parameter.", null));
+            }
         }
 
         for (String importName : table.getImports()) {
@@ -145,6 +149,16 @@ public class UndeclaredVariable extends AnalysisVisitor {
         Set<String> paramNames = new HashSet<>();
         Set<String> localVarNames = new HashSet<>();
 
+        if (table.getReturnType(currentMethod) == null) {
+            for (Symbol field : table.getFields()) {
+                if (method.getDescendants("VarAccess").stream()
+                        .anyMatch(var -> var.get("name").equals(field.getName()))) {
+                    addReport(Report.newError(Stage.SEMANTIC, method.getLine(), method.getColumn(),
+                            "Cannot access instance field '" + field.getName() + "' in a static method.", null));
+                }
+            }
+        }
+
         for (Symbol param : table.getParameters(currentMethod)) {
             if (!paramNames.add(param.getName())) {
                 addReport(Report.newError(Stage.SEMANTIC, method.getLine(), method.getColumn(),
@@ -156,6 +170,10 @@ public class UndeclaredVariable extends AnalysisVisitor {
             if (!localVarNames.add(localVar.getName())) {
                 addReport(Report.newError(Stage.SEMANTIC, method.getLine(), method.getColumn(),
                         "Duplicated local variable: " + localVar.getName(), null));
+            }
+            if (Objects.equals(localVar.getType().getName(), "vararg")) {
+                addReport(Report.newError(Stage.SEMANTIC, method.getLine(), method.getColumn(),
+                        "Vararg variable is not a parameter.", null));
             }
         }
 
@@ -294,16 +312,6 @@ public class UndeclaredVariable extends AnalysisVisitor {
                                 null)
                         );
                     }
-                }
-            }
-        }
-
-        if (table.getReturnType(currentMethod) == null) {
-            for (Symbol field : table.getFields()) {
-                if (method.getDescendants("VarAccess").stream()
-                        .anyMatch(var -> var.get("name").equals(field.getName()))) {
-                    addReport(Report.newError(Stage.SEMANTIC, method.getLine(), method.getColumn(),
-                            "Cannot access instance field '" + field.getName() + "' in a static method.", null));
                 }
             }
         }
