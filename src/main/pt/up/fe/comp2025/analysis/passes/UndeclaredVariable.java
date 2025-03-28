@@ -175,8 +175,15 @@ public class UndeclaredVariable extends AnalysisVisitor {
                 }
             }
 
-            if (Objects.equals(expr.getKind(), "VarRefExpr")) {
-
+            if (Objects.equals(currentMethod, "main") && Objects.equals(expr.getKind(), "ThisExpr")) {
+                var message = "THIS expression is not allowed in static methods.";
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        method.getLine(),
+                        method.getColumn(),
+                        message,
+                        null)
+                );
             }
         }
 
