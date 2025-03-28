@@ -14,7 +14,6 @@ BOOL : 'boolean';
 IF: 'if';
 ELSE: 'else';
 WHILE: 'while';
-LENGTH: 'length'; //XXXXXX
 NEW: 'new';
 TRUE: 'true'; //XXXXXX
 FALSE: 'false'; //XXXXXX
@@ -86,7 +85,7 @@ expr
     | NEW INT '[' expr ']'                          #NewArrayExpr
     | NEW name=ID '('')'                            #NewObjectExpr
     | expr '[' expr ']'                             #ArrayElemExpr
-    | expr '.' LENGTH                               #LengthExpr
+    | expr '.' expr                                 #LengthExpr
     | expr '.' name=ID '('(expr (',' expr)*)?')'    #MethodCallExpr
     |'!' expr                                       #NotExpr
     | expr op= ( '*' | '/' ) expr                   #BinaryExpr
