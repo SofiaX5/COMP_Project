@@ -4,8 +4,10 @@ import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
+import pt.up.fe.comp2025.ast.Kind;
 import pt.up.fe.comp2025.ast.TypeUtils;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static pt.up.fe.comp2025.ast.Kind.*;
@@ -87,8 +89,8 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
     private String visitReturn(JmmNode node, Void unused) {
         // TODO: Hardcoded for int type, needs to be expanded
-        Type retType = TypeUtils.newIntType();
-
+        //Type retType = TypeUtils.newIntType();
+        Type retType = types.getExprType(node.getChild(0), table);
 
         StringBuilder code = new StringBuilder();
 
@@ -135,14 +137,48 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(name);
 
         // params
-        // TODO: Hardcoded for a single parameter, needs to be expanded
-        var paramsCode = visit(node.getChild(1));
-        code.append("(" + paramsCode + ")");
+        // TODO: Hardcoded for a single parameter, needs to be expanded  -> DONEEE
+
+        /*
+        code.append("(");
+        for (int i = 0; i < node.getNumChildren() - 1; i++) {
+            var paramCode = visit(node.getChild(i));
+            code.append(paramCode).append(", ");
+        }
+        var paramCode = visit(node.getChild(node.getNumChildren() - 1));
+        code.append(paramCode).append(")");
+        */
+
+
+        var params = node.getChild(1);
+        List<JmmNode> typeParams = params.getChildren(Kind.TYPE);
+        List<String> nameParams = params.getObjectAsList("name", String.class);
+
+        System.out.println("Method parameters: " + nameParams);
+
+        code.append("(");
+        if (!typeParams.isEmpty()) {
+            for (int i = 0; i < typeParams.size() - 1; i++) {
+                var paramCode = visit(params.getChild(i));
+                code.append(paramCode).append(", ");
+            }
+            var paramCode = visit(params.getChild(typeParams.size() - 1));
+            code.append(paramCode);
+        }
+        code.append(")");
 
         // type
-        // TODO: Hardcoded for int, needs to be expanded
-        var retType = ".i32";
+        // TODO: Hardcoded for int, needs to be expanded -> DONEEE
+
+        var retType = OptUtils.toOllirType(node.getChild(0));
+        System.out.println("Return type: " + retType);
         code.append(retType);
+
+        // var returnExpr = node.getChildren(Kind.EXPR).getFirst();
+        //        var kind = returnExpr.getKind();
+        //        switch (kind) {
+        // var retType = ".i32";
+        // code.append(retType);
         code.append(L_BRACKET);
 
 
@@ -154,6 +190,8 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(stmtsCode);
         code.append(R_BRACKET);
         code.append(NL);
+
+        System.out.println("Generated method code: " + code.toString());
 
         return code.toString();
     }

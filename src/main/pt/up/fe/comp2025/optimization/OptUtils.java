@@ -38,25 +38,29 @@ public class OptUtils {
     }
 
 
-    public String toOllirType(JmmNode typeNode) {
-
+    public static String toOllirType(JmmNode typeNode) {
+        String typeName = typeNode.get("name");
         TYPE.checkOrThrow(typeNode);
 
-        return toOllirType(types.convertType(typeNode));
+        return toOllirType(typeNode);
     }
 
     public String toOllirType(Type type) {
         return toOllirType(type.getName());
     }
 
-    private String toOllirType(String typeName) {
+    private static String toOllirType(String typeName) {
+        boolean isArray = typeName.endsWith("[]");
 
-        String type = "." + switch (typeName) {
+        String baseType = switch (isArray ? typeName.substring(0, typeName.length() - 2) : typeName) {
+            case "boolean" -> "bool";
             case "int" -> "i32";
-            default -> throw new NotImplementedException(typeName);
+            case "void" -> "V";
+            case "String" -> "String";
+            default -> typeName;
         };
 
-        return type;
+        return (isArray ? ".array" : "") + "." + baseType;
     }
 
 

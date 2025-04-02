@@ -418,9 +418,6 @@ public class UndeclaredVariable extends AnalysisVisitor {
     }
 
 
-    // Tests ObjectAssignmentFail and ObjectAssignmentPassImports  are not compatible
-    // ObjectAssignmentPassImports has a comment that we can assigned 2 different objects
-
     private Void visitAssignStmt(JmmNode assignStmt, SymbolTable table) {
         List<JmmNode> exprs = assignStmt.getChildren(Kind.EXPR);
         JmmNode leftExpr = exprs.get(0);
