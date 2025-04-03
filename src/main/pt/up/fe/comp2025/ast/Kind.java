@@ -35,6 +35,7 @@ public enum Kind {
     RETURN_STMT,
     EXPR,
     BINARY_EXPR,
+    NOT_EXPR,
     THIS_EXPR,
     INTEGER_LITERAL,
     VAR_REF_EXPR,

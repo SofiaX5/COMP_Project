@@ -37,7 +37,9 @@ public class UndeclaredVariable extends AnalysisVisitor {
         addVisit(Kind.ASSIGN_STMT, this::visitAssignStmt);
         addVisit(Kind.NEW_OBJECT_EXPR, this::visitNewObjectExpr);
         addVisit(Kind.CLASS_DECL, this::visitClassDecl);
+        addVisit(Kind.NOT_EXPR, this::visitUnaryExpr);
         addVisit(Kind.BINARY_EXPR, this::visitBinaryExpr);
+
     }
 
     private Void visitBinaryExpr(JmmNode binaryExpr, SymbolTable table) {
@@ -102,6 +104,45 @@ public class UndeclaredVariable extends AnalysisVisitor {
 
         return null;
     }
+
+    private Void visitUnaryExpr(JmmNode unaryExpr, SymbolTable table) {
+        if (!unaryExpr.getKind().equals("NotExpr")) {
+            return null;
+        }
+
+        List<JmmNode> children = unaryExpr.getChildren();
+        if (children.size() != 1) {
+            return null;
+        }
+
+        JmmNode operand = children.get(0);
+        Type operandType = TypeUtils.getExprType(operand, table);
+
+        if (operandType == null || !operandType.getName().equals("boolean") || operandType.isArray()) {
+            String message;
+
+            if (operandType == null) {
+                message = "Negation operator '!' requires boolean operand but found unknown type.";
+            } else if (operandType.getName().equals("int")) {
+                message = "Cannot apply negation operator '!' to int.";
+            } else if (operandType.isArray()) {
+                message = "Cannot apply negation operator '!' to an array type.";
+            } else {
+                message = "Negation operator '!' requires boolean operand.";
+            }
+
+            addReport(Report.newError(
+                    Stage.SEMANTIC,
+                    unaryExpr.getLine(),
+                    unaryExpr.getColumn(),
+                    message,
+                    null)
+            );
+        }
+
+        return null;
+    }
+
 
     private Void visitClassDecl(JmmNode classDecl, SymbolTable table) {
         Set<String> fieldNames = new HashSet<>();

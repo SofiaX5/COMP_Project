@@ -73,6 +73,7 @@ param
 
 stmt
     : '{' stmt* '}'                            #BlockStmt
+    //| IF '(' expr ')' stmt (ELSE stmt)?        #IfStmt
     | IF '(' expr ')' stmt ELSE stmt           #IfStmt
     | WHILE '(' expr ')' stmt                  #WhileStmt
     | expr ';'                                 #ExprStmt
