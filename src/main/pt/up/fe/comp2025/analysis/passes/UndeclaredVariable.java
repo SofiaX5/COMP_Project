@@ -39,7 +39,6 @@ public class UndeclaredVariable extends AnalysisVisitor {
         addVisit(Kind.CLASS_DECL, this::visitClassDecl);
         addVisit(Kind.NOT_EXPR, this::visitUnaryExpr);
         addVisit(Kind.BINARY_EXPR, this::visitBinaryExpr);
-
     }
 
     private Void visitBinaryExpr(JmmNode binaryExpr, SymbolTable table) {
@@ -290,28 +289,65 @@ public class UndeclaredVariable extends AnalysisVisitor {
 
             if (Objects.equals(expr.getKind(), "MethodCallExpr")) {
                 List<Symbol> params = table.getParameters(expr.get("name"));
-                if (!(params == null) && !params.isEmpty() && !Objects.equals(params.getFirst().getType(), new Type("vararg", true))) {
-                    for (int i = 0; i < params.size(); i++) {
-                        if (!Objects.equals(TypeUtils.getExprType(babies_expr.get(i + 1), table), params.get(i).getType())) {
-                            var message = "Parameter type don't match.";
-                            addReport(Report.newError(
-                                    Stage.SEMANTIC,
-                                    method.getLine(),
-                                    method.getColumn(),
-                                    message,
-                                    null)
-                            );
+
+                if (params != null && !params.isEmpty()) {
+                    int numArgs = babies_expr.size() - 1;
+
+                    if (numArgs < params.size() && !Objects.equals(params.getFirst().getType(), new Type("vararg", true))) {
+                        var message = "Method called with too few arguments: expected " + params.size() +
+                                ", got " + numArgs + ".";
+                        addReport(Report.newError(
+                                Stage.SEMANTIC,
+                                expr.getLine(),
+                                expr.getColumn(),
+                                message,
+                                null)
+                        );
+                    } else if (numArgs > params.size() && !Objects.equals(params.getFirst().getType(), new Type("vararg", true))) {
+                        var message = "Method called with too many arguments: expected " + params.size() +
+                                ", got " + numArgs + ".";
+                        addReport(Report.newError(
+                                Stage.SEMANTIC,
+                                expr.getLine(),
+                                expr.getColumn(),
+                                message,
+                                null)
+                        );
+                    } else if (!Objects.equals(params.getFirst().getType(), new Type("vararg", true))) {
+                        for (int i = 0; i < params.size() && i < numArgs; i++) {
+                            if (!Objects.equals(TypeUtils.getExprType(babies_expr.get(i + 1), table), params.get(i).getType())) {
+                                var message = "Parameter type doesn't match: expected " + params.get(i).getType() +
+                                        " for parameter " + (i+1) + ".";
+                                addReport(Report.newError(
+                                        Stage.SEMANTIC,
+                                        expr.getLine(),
+                                        expr.getColumn(),
+                                        message,
+                                        null)
+                                );
+                            }
                         }
                     }
                 }
             } else if (Objects.equals(expr.getKind(), "LengthExpr")) {
+                if (babies_expr.size() < 2) {
+                    var message = "Invalid length expression: missing operands.";
+                    addReport(Report.newError(
+                            Stage.SEMANTIC,
+                            expr.getLine(),
+                            expr.getColumn(),
+                            message,
+                            null)
+                    );
+                    continue;
+                }
+
                 JmmNode length_string = babies_expr.getFirst();
                 JmmNode length = babies_expr.get(1);
 
-
                 if ((!Objects.equals(TypeUtils.getExprType(length_string, table), new Type("String", false))
-                && !Objects.equals(TypeUtils.getExprType(length_string, table), new Type("int", true)))
-                || !Objects.equals(length.get("name"),  "length")) {
+                        && !Objects.equals(TypeUtils.getExprType(length_string, table), new Type("int", true)))
+                        || !Objects.equals(length.get("name"),  "length")) {
                     var message = "Invalid length expression.";
                     addReport(Report.newError(
                             Stage.SEMANTIC,
@@ -335,23 +371,15 @@ public class UndeclaredVariable extends AnalysisVisitor {
             }
         }
 
-        if (!Objects.equals(currentMethod, "main")) {
-            JmmNode return_expr = method.getChildren(Kind.EXPR).getFirst();
+        if (!Objects.equals(currentMethod, "main") && !list_method_expr.isEmpty()) {
+            JmmNode return_expr = list_method_expr.getFirst();
             Type return_type = TypeUtils.getExprType(return_expr, table);
-            Type function_type = TypeUtils.convertType(method.getChildren(Kind.TYPE).getFirst());
 
-            if (!Objects.equals(return_type, function_type)) {
-                if (!Objects.equals(return_type, new Type("vararg", false))) {
-                    var message = "Return function type is " + function_type + ", not " + return_type;
-                    addReport(Report.newError(
-                            Stage.SEMANTIC,
-                            method.getLine(),
-                            method.getColumn(),
-                            message,
-                            null)
-                    );
-                } else {
-                    if (!Objects.equals(function_type, new Type("int", false))) {
+            if (!method.getChildren(Kind.TYPE).isEmpty()) {
+                Type function_type = TypeUtils.convertType(method.getChildren(Kind.TYPE).getFirst());
+
+                if (!Objects.equals(return_type, function_type)) {
+                    if (!Objects.equals(return_type, new Type("vararg", false))) {
                         var message = "Return function type is " + function_type + ", not " + return_type;
                         addReport(Report.newError(
                                 Stage.SEMANTIC,
@@ -360,6 +388,17 @@ public class UndeclaredVariable extends AnalysisVisitor {
                                 message,
                                 null)
                         );
+                    } else {
+                        if (!Objects.equals(function_type, new Type("int", false))) {
+                            var message = "Return function type is " + function_type + ", not " + return_type;
+                            addReport(Report.newError(
+                                    Stage.SEMANTIC,
+                                    method.getLine(),
+                                    method.getColumn(),
+                                    message,
+                                    null)
+                            );
+                        }
                     }
                 }
             }
