@@ -165,7 +165,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             var expr = exprVisitor.visit(exprNode);
             code.append("   ");
             code.append(expr.getComputation());
-            System.out.println("AAAAAAAAAA: " + expr.getComputation());
             code.append("ret");
             code.append(ollirTypes.toOllirType(retType));
             code.append(SPACE);
