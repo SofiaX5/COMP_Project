@@ -7,6 +7,7 @@ import pt.up.fe.specs.util.collections.AccumulatorMap;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 
 import static pt.up.fe.comp2025.ast.Kind.TYPE;
+import static pt.up.fe.comp2025.ast.TypeUtils.convertType;
 
 /**
  * Utility methods related to the optimization middle-end.
@@ -39,29 +40,23 @@ public class OptUtils {
 
 
     public static String toOllirType(JmmNode typeNode) {
-        String typeName = typeNode.get("name");
         TYPE.checkOrThrow(typeNode);
-
-        return toOllirType(typeNode);
+        Type type = convertType(typeNode);
+        return toOllirType(type.getName(), type.isArray());
     }
 
     public String toOllirType(Type type) {
-        return toOllirType(type.getName());
+        return toOllirType(type.getName(), type.isArray());
     }
 
-    private static String toOllirType(String typeName) {
-        boolean isArray = typeName.endsWith("[]");
-
-        String baseType = switch (isArray ? typeName.substring(0, typeName.length() - 2) : typeName) {
+    private static String toOllirType(String typeName, boolean isArray) {
+        String baseType = switch (typeName) {
             case "boolean" -> "bool";
-            case "int" -> "i32";
-            case "void" -> "V";
-            case "String" -> "String";
-            default -> typeName;
+            case "int"     -> "i32";
+            case "void"    -> "V";
+            case "String"  -> "String";
+            default        -> typeName;
         };
-
         return (isArray ? ".array" : "") + "." + baseType;
     }
-
-
 }
