@@ -55,8 +55,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(ASSIGN_STMT, this::visitAssignStmt);
         // Expr
 
-        addVisit(RETURN_STMT, this::visitReturn);
-
         // setDefaultVisit(this::defaultVisit);
     }
 
@@ -116,9 +114,12 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         if (isPublic) code.append("public ");
 
         var name = node.get("name");
-        code.append(name);
 
-        if (!Objects.equals(name, "main")) { // Muito hardcode?
+        if (Objects.equals(name, "main")) { // Muito hardcode?
+            code.append("static main(args.array.String).V");
+
+        } else {
+            code.append(name);
             // TODO: Hardcoded for a single parameter, needs to be expanded  -> DONEEE?????
             // Params
             var params = node.getChild(1);
@@ -153,6 +154,26 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                 .map(this::visit)
                 .collect(Collectors.joining("\n   ", "   ", ""));
         code.append(stmtsCode);
+
+        // Return
+        if (!Objects.equals(name, "main")) {
+            List<JmmNode> exprs = node.getChildren(EXPR);
+            JmmNode exprNode = exprs.getFirst();
+
+            Type retType = types.getExprType(exprNode, table);
+
+            var expr = exprVisitor.visit(exprNode);
+            code.append("   ");
+            code.append(expr.getComputation());
+            System.out.println("AAAAAAAAAA: " + expr.getComputation());
+            code.append("ret");
+            code.append(ollirTypes.toOllirType(retType));
+            code.append(SPACE);
+
+            code.append(expr.getCode());
+
+            code.append(END_STMT);
+        }
 
         code.append(R_BRACKET);
         code.append(NL);
@@ -201,35 +222,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         return code.toString();
     }
-
-
-    private String visitReturn(JmmNode node, Void unused) {
-        // TODO: Hardcoded for int type, needs to be expanded
-        //Type retType = TypeUtils.newIntType();
-        Type retType = types.getExprType(node.getChild(0), table);
-
-        StringBuilder code = new StringBuilder();
-
-
-        var expr = node.getNumChildren() > 0 ? exprVisitor.visit(node.getChild(0)) : OllirExprResult.EMPTY;
-
-
-        code.append(expr.getComputation());
-        code.append("ret");
-        code.append(ollirTypes.toOllirType(retType));
-        code.append(SPACE);
-
-        code.append(expr.getCode());
-
-        code.append(END_STMT);
-
-        return code.toString();
-    }
-
-
-
-
-
 
 
     private String buildConstructor() {
