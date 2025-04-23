@@ -93,6 +93,9 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(NL);
         code.append(table.getClassName());
 
+        String superClass = node.hasAttribute("superClass") ? node.get("superClass") : null;
+        if (superClass != null) code.append(" extends ").append(superClass);
+
         code.append(L_BRACKET);
         code.append(NL);
         code.append(NL);
@@ -257,10 +260,12 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         // code to compute self
         // statement has type of lhs
+        // AAAAAAAAAAAAAAAAAAAAAAA MUITO FEIO
         JmmNode lhs = node.getChild(0);
         Type leftType = TypeUtils.getExprType(lhs, table);
         String ollirType = ollirTypes.toOllirType(leftType);
-        var varCode = lhs.get("name") + ollirType;
+        OllirExprResult left = exprVisitor.visit(lhs);
+        var varCode = left.getCode();
 
         // code to compute the children
         var rhsExpr = exprVisitor.visit(node.getChild(1));
