@@ -18,6 +18,7 @@ public class OptUtils {
     private final AccumulatorMap<String> temporaries;
 
     private final TypeUtils types;
+    private int tempCounter = 0;
 
     public OptUtils(TypeUtils types) {
         this.types = types;
@@ -27,7 +28,7 @@ public class OptUtils {
 
     public String nextTemp() {
 
-        return nextTemp("tmp");
+        return "tmp" + (tempCounter++);
     }
 
     public String nextTemp(String prefix) {
