@@ -60,8 +60,23 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
     }
 
     private OllirExprResult visitNewObject(JmmNode node, Void unused) {
-        String code = "";
-        return new OllirExprResult(code);
+        String className = node.get("name");
+        String tempVar = ollirTypes.nextTemp();
+
+        StringBuilder computation = new StringBuilder();
+        StringBuilder code = new StringBuilder();
+
+        computation.append(tempVar).append(".").append(className)
+                .append(" :=.").append(className)
+                .append(" new(").append(className).append(").").append(className)
+                .append(END_STMT);
+
+        computation.append("invokespecial(").append(tempVar).append(".").append(className)
+                .append(", \"<init>\").V").append(END_STMT);
+
+        code.append(tempVar).append(".").append(className);
+
+        return new OllirExprResult(code.toString(), computation.toString());
     }
 
     private OllirExprResult visitArrayElem(JmmNode node, Void unused) {
@@ -77,12 +92,20 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         computation.append(arrayResult.getComputation());
         computation.append(indexResult.getComputation());
 
+        String indexCode = indexResult.getCode();
+        if (indexCode.contains("invokestatic") || indexCode.contains("invokevirtual") || indexCode.contains("[")) {
+            String tempVar = ollirTypes.nextTemp();
+            computation.append(tempVar).append(".i32 :=.i32 ").append(indexCode).append(";\n");
+            indexCode = tempVar + ".i32";
+        }
+
         code.append(arrayResult.getCode())
-                .append("[").append(indexResult.getCode()).append("]")
+                .append("[").append(indexCode).append("]")
                 .append(".i32");
 
         return new OllirExprResult(code.toString(), computation.toString());
     }
+
 
     private OllirExprResult visitLength(JmmNode node, Void unused) {
         JmmNode arrayExpr = node.getChild(0);
