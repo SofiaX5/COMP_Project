@@ -52,8 +52,10 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
     }
 
     private OllirExprResult visitNewArray(JmmNode node, Void unused) {
-        String code = "";
-        return new OllirExprResult(code);
+        StringBuilder code = new StringBuilder();
+        OllirExprResult exprOllir = visit(node.getChild(0));
+        code.append("new(array,").append(exprOllir.getCode()).append(").array.i32");
+        return new OllirExprResult(code.toString());
     }
 
     private OllirExprResult visitNewObject(JmmNode node, Void unused) {

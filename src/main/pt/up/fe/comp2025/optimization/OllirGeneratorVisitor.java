@@ -124,9 +124,10 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         } else {
             code.append(name);
-            // TODO: Hardcoded for a single parameter, needs to be expanded  -> DONEEE?????
             // Params
             var params = node.getChild(1);
+            code.append(visit(params));
+            /*
             List<JmmNode> typeParams = params.getChildren(Kind.TYPE);
             List<String> nameParams = params.getObjectAsList("name", String.class);
 
@@ -142,6 +143,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                 code.append(paramCode);
             }
             code.append(")");
+             */
 
 
             // TODO: Hardcoded for int, needs to be expanded -> DONEEE
@@ -189,13 +191,24 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
 
     private String visitParam(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
 
-        var typeCode = ollirTypes.toOllirType(node.getChild(0));
-        var id = node.get("name");
+        List<JmmNode> typeParams = node.getChildren(Kind.TYPE);
+        List<String> nameParams = node.getObjectAsList("name", String.class);
 
-        String code = id + typeCode;
-
-        return code;
+        code.append("(");
+        if (!typeParams.isEmpty()) {
+            for (int i = 0; i < typeParams.size() - 1; i++) {
+                var typeCode = ollirTypes.toOllirType(typeParams.get(i));
+                var name = nameParams.get(0);
+                code.append(name).append(typeCode).append(", ");
+            }
+            var typeCode = ollirTypes.toOllirType(typeParams.get(typeParams.size() - 1));
+            var name = nameParams.get(typeParams.size() - 1);
+            code.append(name).append(typeCode);
+        }
+        code.append(")");
+        return code.toString();
     }
 
 
