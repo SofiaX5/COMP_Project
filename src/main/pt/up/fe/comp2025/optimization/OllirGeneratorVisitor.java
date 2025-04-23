@@ -59,7 +59,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(ASSIGN_STMT, this::visitAssignStmt);
         // Expr
 
-        setDefaultVisit(this::defaultVisit);
+        //setDefaultVisit(this::defaultVisit);
     }
 
 
@@ -160,7 +160,9 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(stmtsCode);
 
         // Return
-        if (!Objects.equals(name, "main")) {
+        if (Objects.equals(name, "main")) {
+            code.append("ret.V;");
+        } else {
             List<JmmNode> exprs = node.getChildren(EXPR);
             JmmNode exprNode = exprs.getFirst();
 
@@ -231,8 +233,8 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
     private String visitExprStmt(JmmNode node, Void unused) {
         StringBuilder code = new StringBuilder();
-        String exprCode = visit(node.getChild(0));
-        code.append(exprCode);
+        OllirExprResult exprOllir = exprVisitor.visit(node.getChild(0));
+        code.append(exprOllir.getCode());
         return code.toString();
     }
 

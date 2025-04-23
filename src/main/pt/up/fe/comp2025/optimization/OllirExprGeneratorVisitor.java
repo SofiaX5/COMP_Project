@@ -6,6 +6,7 @@ import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
 import pt.up.fe.comp2025.ast.TypeUtils;
 
+import java.util.List;
 import java.util.Objects;
 
 import static pt.up.fe.comp2025.ast.Kind.*;
@@ -71,8 +72,23 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
     }
 
     private OllirExprResult visitMethodCall(JmmNode node, Void unused) {
-        String code = "";
-        return new OllirExprResult(code);
+        StringBuilder code = new StringBuilder();
+        code.append("invokestatic(");
+
+        JmmNode importExpr = node.getChild(0);
+        String funcName = node.get("name");
+        code.append(importExpr.get("name")).append(", \"").append(funcName).append("\"");
+
+        if (node.getNumChildren() > 1) {
+            List<JmmNode> params = node.getChildren(EXPR);
+            for (int i = 1; i < node.getNumChildren(); i++) {
+                JmmNode param = params.get(i);
+                OllirExprResult paramOllir = visit(param);
+                code.append(", ").append(paramOllir.getCode());
+            }
+        }
+        code.append(").V;\n");
+        return new OllirExprResult(code.toString());
     }
 
     private OllirExprResult visitNot(JmmNode node, Void unused) {
