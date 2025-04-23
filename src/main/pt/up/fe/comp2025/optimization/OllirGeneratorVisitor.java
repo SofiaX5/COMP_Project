@@ -58,6 +58,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(EXPR_STMT, this::visitExprStmt);
         addVisit(ASSIGN_STMT, this::visitAssignStmt);
         addVisit(WHILE_STMT, this::visitWhileStmt);
+        addVisit(ARRAY_ASSIGN_STMT, this::visitArrayAssignStmt);
 
         // Expr
 
@@ -290,12 +291,22 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                     .append(ASSIGN).append(ollirType).append(SPACE)
                     .append(rhsExpr.getCode()).append(END_STMT);
         } else {
+            String varName;
+            if (lhs.getKind().equals(VAR_REF_EXPR)) {
+                varName = lhs.get("name");
+            } else {
+                OllirExprResult lhsExpr = exprVisitor.visit(lhs);
+                code.append(lhsExpr.getComputation());
+                code.append(lhsExpr.getCode()).append(SPACE)
+                        .append(ASSIGN).append(ollirType).append(SPACE)
+                        .append(rhsExpr.getCode()).append(END_STMT);
+                return code.toString();
+            }
 
             String tmp = ollirTypes.nextTemp() + ollirType;
             code.append(tmp).append(SPACE).append(ASSIGN).append(ollirType).append(SPACE)
                     .append(rhsExpr.getCode()).append(END_STMT);
 
-            String varName = lhs.get("name");
             code.append(varName).append(ollirType).append(SPACE)
                     .append(ASSIGN).append(ollirType).append(SPACE)
                     .append(tmp).append(END_STMT);
@@ -326,6 +337,32 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         return code.toString();
     }
 
+    private String visitArrayAssignStmt(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+
+        JmmNode array = node.getChild(0);
+        JmmNode index = node.getChild(1);
+        JmmNode value = node.getChild(2);
+
+        OllirExprResult arrayExpr = exprVisitor.visit(array);
+        OllirExprResult indexExpr = exprVisitor.visit(index);
+        OllirExprResult valueExpr = exprVisitor.visit(value);
+
+        Type elementType = TypeUtils.getExprType(value, table);
+        String ollirType = ollirTypes.toOllirType(elementType);
+
+        code.append(arrayExpr.getComputation());
+        code.append(indexExpr.getComputation());
+        code.append(valueExpr.getComputation());
+
+        code.append(arrayExpr.getCode())
+                .append("[").append(indexExpr.getCode()).append("]")
+                .append(ollirType).append(SPACE)
+                .append(ASSIGN).append(ollirType).append(SPACE)
+                .append(valueExpr.getCode()).append(END_STMT);
+
+        return code.toString();
+    }
 
 
     private String buildConstructor() {

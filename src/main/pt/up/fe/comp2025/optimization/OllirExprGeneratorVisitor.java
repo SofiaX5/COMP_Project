@@ -65,12 +65,23 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
     }
 
     private OllirExprResult visitArrayElem(JmmNode node, Void unused) {
+        StringBuilder computation = new StringBuilder();
         StringBuilder code = new StringBuilder();
+
         JmmNode arrayName = node.getChild(0);
         JmmNode arrayIndex = node.getChild(1);
-        code.append(visit(arrayName).getCode()).append("[").append(visit(arrayIndex).getCode()).append("]");
-        // arrayName.get("name")
-        return new OllirExprResult(code.toString());
+
+        OllirExprResult arrayResult = visit(arrayName);
+        OllirExprResult indexResult = visit(arrayIndex);
+
+        computation.append(arrayResult.getComputation());
+        computation.append(indexResult.getComputation());
+
+        code.append(arrayResult.getCode())
+                .append("[").append(indexResult.getCode()).append("]")
+                .append(".i32");
+
+        return new OllirExprResult(code.toString(), computation.toString());
     }
 
     private OllirExprResult visitLength(JmmNode node, Void unused) {
