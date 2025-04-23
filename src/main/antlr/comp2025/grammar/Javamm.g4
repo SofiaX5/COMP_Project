@@ -73,7 +73,7 @@ param
 
 stmt
     : '{' stmt* '}'                            #BlockStmt
-    //| IF '(' expr ')' stmt (ELSE stmt)?        #IfStmt
+    // IF '(' expr ')' stmt (ELSE stmt)?       #IfStmt
     | IF '(' expr ')' stmt ELSE stmt           #IfStmt
     | WHILE '(' expr ')' stmt                  #WhileStmt
     | expr ';'                                 #ExprStmt
@@ -95,8 +95,8 @@ expr
     | expr op= '&&' expr                            #BinaryExpr
     | '[' (expr (',' expr)*)? ']'                   #ArrayExpr
     | value=INTEGER                                 #IntegerLiteral
-    | TRUE                                          #BooleanLiteral
-    | FALSE                                         #BooleanLiteral
+    | value=TRUE                                    #BooleanLiteral
+    | value=FALSE                                   #BooleanLiteral
     | THIS                                          #ThisExpr
     | name=ID                                       #VarRefExpr
     ;

@@ -6,6 +6,8 @@ import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
 import pt.up.fe.comp2025.ast.TypeUtils;
 
+import java.util.Objects;
+
 import static pt.up.fe.comp2025.ast.Kind.*;
 
 /**
@@ -36,13 +38,13 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         addVisit(NEW_ARRAY_EXPR, this::visitNewArray);
         addVisit(NEW_OBJECT_EXPR, this::visitNewObject);
         addVisit(ARRAY_ELEM_EXPR, this::visitArrayElem);
-        // length
+        addVisit(LENGTH_EXPR, this::visitLength);
         addVisit(METHOD_CALL_EXPR, this::visitMethodCall);
         addVisit(NOT_EXPR, this::visitNot);
         addVisit(BINARY_EXPR, this::visitBinExpr);
         addVisit(ARRAY_EXPR, this::visitArray);
         addVisit(INTEGER_LITERAL, this::visitInteger);
-        // BOOLEAN
+        addVisit(BOOLEAN_LITERAL, this::visitBoolean);
         addVisit(THIS_EXPR, this::visitThis);
         addVisit(VAR_REF_EXPR, this::visitVarRef);
         // setDefaultVisit(this::defaultVisit);
@@ -59,6 +61,11 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
     }
 
     private OllirExprResult visitArrayElem(JmmNode node, Void unused) {
+        String code = "";
+        return new OllirExprResult(code);
+    }
+
+    private OllirExprResult visitLength(JmmNode node, Void unused) {
         String code = "";
         return new OllirExprResult(code);
     }
@@ -107,7 +114,20 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
     private OllirExprResult visitInteger(JmmNode node, Void unused) {
         var intType = TypeUtils.newIntType();
         String ollirIntType = ollirTypes.toOllirType(intType);
+
         String code = node.get("value") + ollirIntType;
+        return new OllirExprResult(code);
+    }
+
+    private OllirExprResult visitBoolean(JmmNode node, Void unused) {
+        var boolType = TypeUtils.newBoolType();
+        String ollirBoolType = ollirTypes.toOllirType(boolType);
+
+        String value;
+        if (Objects.equals(node.get("value"), "true")) value = "1";
+        else value = "0";
+
+        String code = value + ollirBoolType;
         return new OllirExprResult(code);
     }
 

@@ -52,10 +52,14 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         // Type
         addVisit(METHOD_DECL, this::visitMethodDecl);
         addVisit(PARAM, this::visitParam);
+
+        addVisit(BLOCK_STMT, this::visitBlockStmt);
+        addVisit(IF_STMT, this::visitIfStmt);
+        addVisit(EXPR_STMT, this::visitExprStmt);
         addVisit(ASSIGN_STMT, this::visitAssignStmt);
         // Expr
 
-        // setDefaultVisit(this::defaultVisit);
+        setDefaultVisit(this::defaultVisit);
     }
 
 
@@ -190,6 +194,46 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         String code = id + typeCode;
 
         return code;
+    }
+
+
+    private String visitBlockStmt(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        for (JmmNode child : node.getChildren()) {
+            String stmtCode = visit(child);
+            code.append(stmtCode);
+        }
+        return code.toString();
+    }
+
+
+    private String visitIfStmt(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        OllirExprResult ifExpr = exprVisitor.visit(node.getChild(0));
+        String thenStmt = visit(node.getChild(1));
+        String elseStmt = visit(node.getChild(2));
+        String ifNum = "0";
+
+        code.append(ifExpr.getComputation());
+
+        code.append("if (").append(ifExpr.getCode()).append(") goto then").append(ifNum).append(END_STMT);
+        code.append(elseStmt);
+        code.append("goto endif").append(ifNum).append(END_STMT);
+        code.append(NL);
+
+        code.append("then").append(ifNum).append(":\n");
+        code.append(thenStmt);
+        code.append("endif").append(ifNum).append(":\n");
+
+        return code.toString();
+    }
+
+
+    private String visitExprStmt(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        String exprCode = visit(node.getChild(0));
+        code.append(exprCode);
+        return code.toString();
     }
 
 

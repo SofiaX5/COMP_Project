@@ -21,6 +21,10 @@ public class TypeUtils {
         return new Type("int", false);
     }
 
+    public static Type newBoolType() {
+        return new Type("boolean", false);
+    }
+
 
     public static Type convertType(JmmNode typeNode) {
         var kind = typeNode.getKind();
