@@ -6,6 +6,7 @@ import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
 import pt.up.fe.comp2025.ast.TypeUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -48,6 +49,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         addVisit(BOOLEAN_LITERAL, this::visitBoolean);
         addVisit(THIS_EXPR, this::visitThis);
         addVisit(VAR_REF_EXPR, this::visitVarRef);
+        addVisit(PARENTHESIZES_EXPR, this::visitParenthesizesExpr);
 
         // setDefaultVisit(this::defaultVisit);
     }
@@ -129,32 +131,64 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         StringBuilder code = new StringBuilder();
 
         JmmNode target = node.getChild(0);
-        String className = target.get("name");
         String methodName = node.get("name");
-
-        code.append("invokestatic(")
-                .append(className).append(", \"").append(methodName).append("\"");
-
         List<JmmNode> paramNodes = node.getChildren().subList(1, node.getNumChildren());
 
-        for (int i = 0; i < paramNodes.size(); i++) {
-            OllirExprResult paramResult = visit(paramNodes.get(i));
+        String targetName = target.get("name");
+        boolean isImportedClass = false;
+
+        for (String importStr : table.getImports()) {
+            String simpleImport = importStr.contains(".") ?
+                    importStr.substring(importStr.lastIndexOf('.') + 1) : importStr;
+            if (simpleImport.equals(targetName)) {
+                isImportedClass = true;
+                break;
+            }
+        }
+
+        boolean isStaticCall = isImportedClass;
+
+        List<String> paramCodes = new ArrayList<>();
+        for (JmmNode param : paramNodes) {
+            OllirExprResult paramResult = visit(param);
             computation.append(paramResult.getComputation());
 
             String paramCode = paramResult.getCode();
-
-            if (paramCode.contains("[") || paramCode.contains("invoke") || paramCode.contains("/")) {
+            if (paramCode.contains("invoke") || paramCode.contains("[") || paramCode.contains("/")) {
                 String tempParam = ollirTypes.nextTemp() + ".i32";
                 computation.append(tempParam).append(" :=.i32 ").append(paramCode).append(";\n");
                 paramCode = tempParam;
             }
 
-            code.append(i == 0 ? ", " : ", ");
-            code.append(paramCode);
+            paramCodes.add(paramCode);
         }
 
+        Type returnType = types.getExprType(node, table);
+        String ollirRetType = ollirTypes.toOllirType(returnType);
 
-        code.append(").V");
+        if (isStaticCall) {
+            code.append("invokestatic(")
+                    .append(targetName).append(", \"").append(methodName).append("\"");
+
+            for (String paramCode : paramCodes) {
+                code.append(", ").append(paramCode);
+            }
+
+            code.append(")").append(ollirRetType);
+        } else {
+            OllirExprResult targetResult = visit(target);
+            computation.append(targetResult.getComputation());
+
+            code.append("invokevirtual(")
+                    .append(targetResult.getCode())
+                    .append(", \"").append(methodName).append("\"");
+
+            for (String paramCode : paramCodes) {
+                code.append(", ").append(paramCode);
+            }
+
+            code.append(")").append(ollirRetType);
+        }
 
         return new OllirExprResult(code.toString(), computation.toString());
     }
@@ -248,6 +282,12 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         String ollirType = ollirTypes.toOllirType(type);
         String code = name + ollirType;
         return new OllirExprResult(code);
+    }
+
+    private OllirExprResult visitParenthesizesExpr(JmmNode node, Void unused) {
+        OllirExprResult innerExpr = visit(node.getChild(0));
+
+        return innerExpr;
     }
 
     /**
