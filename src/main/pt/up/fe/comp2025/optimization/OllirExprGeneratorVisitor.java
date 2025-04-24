@@ -141,9 +141,18 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
             OllirExprResult paramResult = visit(paramNodes.get(i));
             computation.append(paramResult.getComputation());
 
+            String paramCode = paramResult.getCode();
+
+            if (paramCode.contains("[") || paramCode.contains("invoke") || paramCode.contains("/")) {
+                String tempParam = ollirTypes.nextTemp() + ".i32";
+                computation.append(tempParam).append(" :=.i32 ").append(paramCode).append(";\n");
+                paramCode = tempParam;
+            }
+
             code.append(i == 0 ? ", " : ", ");
-            code.append(paramResult.getCode());
+            code.append(paramCode);
         }
+
 
         code.append(").V");
 
