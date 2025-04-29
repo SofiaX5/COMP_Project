@@ -134,15 +134,21 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         String methodName = node.get("name");
         List<JmmNode> paramNodes = node.getChildren().subList(1, node.getNumChildren());
 
-        String targetName = target.get("name");
+        String targetName;
         boolean isImportedClass = false;
 
-        for (String importStr : table.getImports()) {
-            String simpleImport = importStr.contains(".") ?
-                    importStr.substring(importStr.lastIndexOf('.') + 1) : importStr;
-            if (simpleImport.equals(targetName)) {
-                isImportedClass = true;
-                break;
+        if (target.getKind().equals("ThisExpr")) {
+            targetName = "this";
+        } else {
+            targetName = target.get("name");
+
+            for (String importStr : table.getImports()) {
+                String simpleImport = importStr.contains(".") ?
+                        importStr.substring(importStr.lastIndexOf('.') + 1) : importStr;
+                if (simpleImport.equals(targetName)) {
+                    isImportedClass = true;
+                    break;
+                }
             }
         }
 
@@ -176,8 +182,14 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
             code.append(")").append(ollirRetType);
         } else {
-            OllirExprResult targetResult = visit(target);
-            computation.append(targetResult.getComputation());
+            OllirExprResult targetResult;
+
+            if (targetName.equals("this")) {
+                targetResult = new OllirExprResult("this", "");
+            } else {
+                targetResult = visit(target);
+                computation.append(targetResult.getComputation());
+            }
 
             code.append("invokevirtual(")
                     .append(targetResult.getCode())
@@ -192,6 +204,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
         return new OllirExprResult(code.toString(), computation.toString());
     }
+
 
 
 
@@ -272,9 +285,9 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
     }
 
     private OllirExprResult visitThis(JmmNode node, Void unused) {
-        String code = "";
-        return new OllirExprResult(code);
+        return new OllirExprResult("this." + table.getClassName());
     }
+
 
     private OllirExprResult visitVarRef(JmmNode node, Void unused) {
         var name = node.get("name");
