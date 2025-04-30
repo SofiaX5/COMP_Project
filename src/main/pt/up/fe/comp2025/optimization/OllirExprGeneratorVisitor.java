@@ -219,6 +219,12 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
     }
 
     private OllirExprResult visitBinExpr(JmmNode node, Void unused) {
+        String op = node.get("op");
+
+        if (op.equals("&&")) {
+            return handleLogicalAnd(node);
+        }
+
         var lhs = visit(node.getChild(0));
         var rhs = visit(node.getChild(1));
 
@@ -242,6 +248,34 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
                 .append(rhs.getCode()).append(END_STMT);
 
         return new OllirExprResult(code, computation);
+    }
+
+    private OllirExprResult handleLogicalAnd(JmmNode node) {
+        var lhs = visit(node.getChild(0));
+        var rhs = visit(node.getChild(1));
+
+        StringBuilder computation = new StringBuilder();
+
+        computation.append(lhs.getComputation());
+
+        String labelId = ollirTypes.nextTemp().substring(4);
+        String andEndLabel = "and_end_" + labelId;
+
+        String resultVar = ollirTypes.nextTemp() + ".bool";
+
+        computation.append("if (").append(lhs.getCode()).append(") goto ").append(andEndLabel).append("_check_rhs;\n");
+
+        computation.append(resultVar).append(" :=.bool 0.bool;\n");
+        computation.append("goto ").append(andEndLabel).append(";\n");
+
+        computation.append(andEndLabel).append("_check_rhs:\n");
+        computation.append(rhs.getComputation());
+
+        computation.append(resultVar).append(" :=.bool ").append(rhs.getCode()).append(";\n");
+
+        computation.append(andEndLabel).append(":\n");
+
+        return new OllirExprResult(resultVar, computation.toString());
     }
 
     private OllirExprResult visitArray(JmmNode node, Void unused) {
