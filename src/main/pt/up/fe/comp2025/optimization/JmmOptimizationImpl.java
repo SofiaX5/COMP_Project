@@ -27,6 +27,7 @@ public class JmmOptimizationImpl implements JmmOptimization {
     @Override
     public JmmSemanticsResult optimize(JmmSemanticsResult semanticsResult) {
         // AST Optimizations: Constant Propagation and Constant Folding
+        /*
         var constProp = new ConstPropVisitor();
         var constFold = new ConstFoldVisitor();
 
@@ -36,7 +37,7 @@ public class JmmOptimizationImpl implements JmmOptimization {
             if (constProp.visit(semanticsResult.getRootNode())) changed = true;
             if (constFold.visit(semanticsResult.getRootNode())) changed = true;
         } while (changed); // Repeat until no further changes occur
-
+        */
         return semanticsResult;
     }
 

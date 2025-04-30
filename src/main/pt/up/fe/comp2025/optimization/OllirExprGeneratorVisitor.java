@@ -1,9 +1,11 @@
 package pt.up.fe.comp2025.optimization;
 
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
+import pt.up.fe.comp2025.ast.Kind;
 import pt.up.fe.comp2025.ast.TypeUtils;
 
 import java.util.ArrayList;
@@ -290,11 +292,30 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
 
     private OllirExprResult visitVarRef(JmmNode node, Void unused) {
+        StringBuilder code = new StringBuilder();
+        StringBuilder computation = new StringBuilder();
+
         var name = node.get("name");
+        final var refName = name;
         Type type = types.getExprType(node,table);
         String ollirType = ollirTypes.toOllirType(type);
-        String code = name + ollirType;
-        return new OllirExprResult(code);
+
+        JmmNode parent = node.getParent();
+        if (parent.getKind().equals(Kind.METHOD_DECL.toString())) {
+            String methodName = parent.get("name");
+            boolean isField = table.getLocalVariables(methodName).stream().map(Symbol::getName).noneMatch(varName -> varName.equals(refName))
+                                && table.getParameters(methodName).stream().map(Symbol::getName).noneMatch(varName -> varName.equals(refName));
+            if (isField) {
+                name = ollirTypes.nextTemp();
+
+                computation.append(name).append(ollirType)
+                        .append(" :=").append(ollirType)
+                        .append(" getfield(this,").append(name).append(ollirType).append(")").append(ollirType)
+                        .append(END_STMT);
+            }
+        }
+        code.append(name).append(ollirType);
+        return new OllirExprResult(code.toString(), computation.toString());
     }
 
     private OllirExprResult visitParenthesizesExpr(JmmNode node, Void unused) {

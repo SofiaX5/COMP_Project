@@ -1,5 +1,6 @@
 package pt.up.fe.comp2025.optimization;
 
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
@@ -149,24 +150,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
             // Params
             var params = node.getChild(1);
             code.append(visit(params));
-            /*
-            List<JmmNode> typeParams = params.getChildren(Kind.TYPE);
-            List<String> nameParams = params.getObjectAsList("name", String.class);
-
-            System.out.println("Method parameters: " + nameParams);
-
-            code.append("(");
-            if (!typeParams.isEmpty()) {
-                for (int i = 0; i < typeParams.size() - 1; i++) {
-                    var paramCode = visit(params.getChild(i));
-                    code.append(paramCode).append(", ");
-                }
-                var paramCode = visit(params.getChild(typeParams.size() - 1));
-                code.append(paramCode);
-            }
-            code.append(")");
-             */
-
 
             // TODO: Hardcoded for int, needs to be expanded -> DONEEE
             // Type
@@ -308,8 +291,24 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                     .append(rhsExpr.getCode()).append(END_STMT);
         } else {
             String varName;
-            if (lhs.getKind().equals(VAR_REF_EXPR)) {
+            if (lhs.getKind().equals("VarRefExpr")) {
+                OllirExprResult lhsExpr = exprVisitor.visit(lhs);
+                code.append(lhsExpr.getComputation());
                 varName = lhs.get("name");
+
+
+
+
+                JmmNode parent = node.getParent();
+                if (parent.getKind().equals(Kind.METHOD_DECL.toString())) {
+                    String methodName = parent.get("name");
+                    boolean isField = table.getLocalVariables(methodName).stream().map(Symbol::getName).noneMatch(varName2 -> varName2.equals(varName))
+                            && table.getParameters(methodName).stream().map(Symbol::getName).noneMatch(varName2 -> varName2.equals(varName));
+                    if (isField) {
+                        code.append("putfield(this, ").append(lhsExpr.getCode()).append(", ").append(rhsExpr.getCode()).append(").V").append(END_STMT);
+                        return code.toString();
+                    }
+                }
             } else {
                 OllirExprResult lhsExpr = exprVisitor.visit(lhs);
                 code.append(lhsExpr.getComputation());
