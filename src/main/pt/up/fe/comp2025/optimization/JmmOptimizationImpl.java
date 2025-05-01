@@ -1,5 +1,7 @@
 package pt.up.fe.comp2025.optimization;
 
+import org.specs.comp.ollir.ClassUnit;
+import org.specs.comp.ollir.Method;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.ollir.JmmOptimization;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
@@ -29,6 +31,7 @@ public class JmmOptimizationImpl implements JmmOptimization {
     @Override
     public JmmSemanticsResult optimize(JmmSemanticsResult semanticsResult) {
         // AST Optimizations: Constant Propagation and Constant Folding
+
         var constProp = new ConstPropVisitor();
         var constFold = new ConstFoldVisitor();
 
@@ -43,8 +46,25 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
     @Override
     public OllirResult optimize(OllirResult ollirResult) {
-        // Perform AST-level optimizations if enabled
+        String registerLimitStr = ollirResult.getConfig().getOrDefault("registerAllocation", "-1");
+        int registerLimit;
 
+        try {
+            registerLimit = Integer.parseInt(registerLimitStr);
+        } catch (NumberFormatException e) {
+            registerLimit = -1;
+        }
+
+        if (registerLimit > 0) {
+            ClassUnit classUnit = ollirResult.getOllirClass();
+
+            for (Method method : classUnit.getMethods()) {
+                RegisterAllocator allocator = new RegisterAllocator(method, registerLimit);
+                allocator.allocate();
+            }
+
+            System.out.println("Applied register allocation with limit: " + registerLimit);
+        }
 
         return ollirResult;
     }

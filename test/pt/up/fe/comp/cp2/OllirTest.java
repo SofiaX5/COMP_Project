@@ -342,7 +342,7 @@ public class OllirTest {
         CpUtils.assertEquals("Number of array reads", 6, numArrayReads, result);
     }
 
-
+    
 
 
 }
