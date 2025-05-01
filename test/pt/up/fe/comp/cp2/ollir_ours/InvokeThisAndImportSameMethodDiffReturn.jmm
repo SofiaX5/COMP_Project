@@ -1,0 +1,32 @@
+import Auxi;
+import io;
+
+class InvokeThisAndImportSame {
+
+    public static void main(String[] args) {
+        InvokeThisAndImportSame a;
+        Auxi x;
+        int res;
+
+        a = new InvokeThisAndImportSame();
+        x = new Auxi();
+
+        res = a.foo(x);
+    }
+
+    public int foo(Auxi d) {
+        int a;
+        boolean b;
+
+        a = this.instanceCallBool();
+        b = d.instanceCallBool();
+
+        io.println(a);
+        io.println(b);
+        return 0;
+    }
+
+    public int instanceCallBool() {
+        return 30;
+    }
+}

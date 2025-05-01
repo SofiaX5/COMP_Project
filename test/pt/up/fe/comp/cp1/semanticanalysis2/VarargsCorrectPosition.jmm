@@ -1,0 +1,12 @@
+// Assuming your language supports varargs like Java
+class VarargsCorrectPosition {
+    public int sum(int... numbers) {  // Varargs must be the last parameter
+        int total;
+        total = 0;
+        return total;
+    }
+
+    public int concat(String prefix, String... strings) {  // Varargs as last parameter is valid
+        return 1;  // Simplification, just to check syntax validity
+    }
+}

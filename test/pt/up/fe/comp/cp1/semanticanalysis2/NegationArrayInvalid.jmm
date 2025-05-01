@@ -1,0 +1,11 @@
+class NegationArrayInvalid {
+    public boolean foo() {
+        int[] arr;
+        boolean result;
+
+        arr = new int[5];
+        result = !arr;  // Error: Cannot apply negation to an array
+
+        return result;
+    }
+}

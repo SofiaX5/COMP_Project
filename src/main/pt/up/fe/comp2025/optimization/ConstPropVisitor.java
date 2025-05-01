@@ -37,17 +37,22 @@ public class ConstPropVisitor extends PostorderJmmVisitor<Map<String, JmmNode>, 
         JmmNode lhs = assignment.getChild(0);
         JmmNode rhs = assignment.getChild(1);
 
+        if (!lhs.getKind().equals("VarRefExpr") || !lhs.getAttributes().contains("name")) {
+            visit(rhs, context);
+            return false;
+        }
+
         String varName = lhs.get("name");
         visit(rhs, context);
 
         System.out.println("SOCORRO" + lhs.getKind() + "   -   " + rhs.getKind());
-        // Check if the right-hand side is now a constant
+
         if (rhs.getKind().equals("IntegerLiteral") || rhs.getKind().equals("BooleanLiteral")) {
-            context.put(varName, rhs); // Update context with constant value
+            context.put(varName, rhs);
             System.out.println("Propagating constant: " + varName + " = " + rhs.get("value"));
             return true;
         } else {
-            context.remove(varName); // Variable now has unknown value
+            context.remove(varName);
         }
 
         return false;

@@ -1,0 +1,12 @@
+import ioPlus;
+class ComplexMulDiv {
+	public static void main(String[] args) {
+        int a;
+        int b;
+        int c;
+        a = 20;
+        b = 5 * 2;
+        c =  a / b;
+		ioPlus.printResult(c);
+	}
+}

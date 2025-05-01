@@ -1,0 +1,11 @@
+class NegationObjectInvalid {
+    public boolean foo() {
+        NegationObjectInvalid obj;
+        boolean result;
+
+        obj = new NegationObjectInvalid();
+        result = !obj;  // Error: Cannot apply negation to an object
+
+        return result;
+    }
+}

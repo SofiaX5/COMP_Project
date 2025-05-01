@@ -1,0 +1,5 @@
+class VarargsWrongPositionInvalid {
+    public int invalid(int... numbers, String suffix) {  // Error: Varargs must be the last parameter
+        return 1;
+    }
+}

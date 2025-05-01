@@ -1,0 +1,17 @@
+import foo.bar.A;
+import foo.bar.B;
+import io;
+
+class BasicImportsPackages {
+
+	public static void main(String[] args) {
+	    int a;
+	    int b;
+
+	    a = A.fooInt();
+	    b = B.fooInt();
+
+	    io.println(a);
+	    io.println(b);
+	}
+}

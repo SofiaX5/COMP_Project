@@ -1,0 +1,11 @@
+class NegationIntInvalid {
+    public boolean foo() {
+        int a;
+        boolean result;
+
+        a = 5;
+        result = !a;  // Error: Cannot apply negation to int
+
+        return result;
+    }
+}

@@ -1,0 +1,29 @@
+import Auxi;
+import io;
+
+class InvokeImportMixed {
+
+    public static void main(String[] args) {
+        InvokeImportMixed a;
+        Auxi x;
+        int res;
+
+        a = new InvokeImportMixed();
+        x = new Auxi();
+
+        res = a.foo(x);
+        io.println(res);
+    }
+
+    public int foo(Auxi d) {
+        int a;
+        a = 0;
+
+        Auxi.staticCall(a);
+
+        d.instanceCallVoid();
+        a = d.instanceCallInt();
+
+        return a;
+    }
+}

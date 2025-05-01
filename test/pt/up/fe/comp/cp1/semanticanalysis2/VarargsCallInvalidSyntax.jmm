@@ -1,0 +1,9 @@
+class Test {
+     public int f(int i, int... a) {
+         return i;
+     }
+
+     public int foo(){
+         return this.f(2, [1,2]);
+     }
+ }

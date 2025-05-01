@@ -1,0 +1,42 @@
+import io;
+
+class Structure_fields {
+    int a;
+    boolean b;
+
+    public static void main(String[] args) {
+        Structure_fields sf;
+        int af;
+        boolean bf;
+
+        sf = new Structure_fields();
+
+        sf.setA(25);
+        sf.setB(true);
+
+        af = sf.a();
+        bf = sf.b();
+        io.println(af);
+        io.println(bf);
+    }
+
+    int setA(int value) {
+        a = value;
+        return 0;
+    }
+
+    int setB(boolean value) {
+        b = value;
+        return 0;
+    }
+
+    int a() {
+        return a;
+    }
+
+    boolean b() {
+        return b;
+    }
+
+
+}

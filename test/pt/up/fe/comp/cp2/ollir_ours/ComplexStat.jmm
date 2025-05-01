@@ -1,0 +1,55 @@
+
+
+import ioPlus;
+class ComplexStat {
+
+
+    public int func(int a, int b){
+        int c;
+        int i;
+        int j;
+        boolean flag;
+        flag = true;
+        i = 0;
+        while (i < a) {
+            if(flag){
+                j = 0;
+                while(j < b)
+                {
+                  if (j < 1) {
+                    ioPlus.printResult(1);
+                  } else {
+                    ioPlus.printResult(2);
+                  }
+                  j = j + 1;
+                }
+                flag = false;
+            } else {
+                j = 0;
+                while(j < b)
+                {
+                  if (j < 1) {
+                    c = 0;
+                    while( c < 2) {
+                        ioPlus.printResult(3);
+                        c = c + 1;
+                    }
+                  } else {
+                    ioPlus.printResult(4);
+                  }
+                  j = j +1;
+                }
+                flag = true;
+            }
+            i = i + 1;
+        }
+        return 1;
+    }
+
+	public static void main(String[] args) {
+        ComplexStat d;
+        int a;
+        d = new ComplexStat();
+        a = d.func(3,2);
+	}
+}

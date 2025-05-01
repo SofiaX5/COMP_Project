@@ -12,16 +12,18 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
     @Override
     public OllirResult toOllir(JmmSemanticsResult semanticsResult) {
+        var optimizedResult = semanticsResult;
+        if (semanticsResult.getConfig().getOrDefault("optimize", "false").equals("true")) {
+            optimizedResult = optimize(semanticsResult);
+        }
 
-        // Create visitor that will generate the OLLIR code
-        var visitor = new OllirGeneratorVisitor(semanticsResult.getSymbolTable());
+        var visitor = new OllirGeneratorVisitor(optimizedResult.getSymbolTable());
+        var ollirCode = visitor.visit(optimizedResult.getRootNode());
 
-        // Visit the AST and obtain OLLIR code
-        var ollirCode = visitor.visit(semanticsResult.getRootNode());
+        System.out.println("Generated method code: " + ollirCode);
+        System.out.println("OLLIR:\n" + ollirCode);
 
-        System.out.println("\nOLLIR:\n\n" + ollirCode);
-
-        return new OllirResult(semanticsResult, ollirCode, Collections.emptyList());
+        return new OllirResult(optimizedResult, ollirCode, Collections.emptyList());
     }
 
     @Override

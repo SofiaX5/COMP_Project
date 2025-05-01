@@ -1,0 +1,10 @@
+class FlowControl_if_icmpge {
+	public static void main(String[] args) {
+		if (1 < 3) {
+
+		}
+		else {
+
+		}
+	}
+}

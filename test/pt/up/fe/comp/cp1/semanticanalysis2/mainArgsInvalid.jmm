@@ -1,0 +1,5 @@
+class MainArgsInvalid {
+    public static void main(String args[5]) {
+        System.out.println("Teste inválido");
+    }
+}
