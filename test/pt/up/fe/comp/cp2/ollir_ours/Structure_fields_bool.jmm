@@ -1,7 +1,0 @@
-class Structure_fields {
-    boolean a;
-
-    public static void main(String[] args) {
-
-    }
-}
