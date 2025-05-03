@@ -54,7 +54,6 @@ public class ConstFoldVisitor extends PostorderJmmVisitor<Map<String, JmmNode>, 
                         return false; // Unsupported operation
                     }
                 }
-                // Replace BinaryOp node with a constant literal
                 newNode = new JmmNodeImpl(Collections.singletonList(Kind.INTEGER_LITERAL.toString()));
                 newNode.putObject("value", String.valueOf(result));
             }
@@ -78,8 +77,8 @@ public class ConstFoldVisitor extends PostorderJmmVisitor<Map<String, JmmNode>, 
                 return false;
             }
 
+            // Replace BinaryOp node with a constant literal
             binOp.replace(newNode);
-            System.out.println("FOLDING AAAAAAAAAAAAAAAA" + binOp.getKind());
             //System.out.println("Folding constant expression: " + leftVal + " " + op + " " + rightVal + " -> " + result);
            return true;
         }
