@@ -197,7 +197,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                 Type returnType = TypeUtils.convertType(typeNode);
                 String ollirRetType = ollirTypes.toOllirType(returnType);
 
-                // Generate appropriate default return value based on type
                 if (returnType.isArray() || Objects.equals(returnType.getName(), "String") ||
                         Objects.equals(returnType.getName(), "Object") || !returnType.getName().equals("int") && !returnType.getName().equals("boolean")) {
                     code.append("ret").append(ollirRetType).append(" null").append(ollirRetType).append(END_STMT);
@@ -206,7 +205,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                 } else if (returnType.getName().equals("boolean")) {
                     code.append("ret").append(ollirRetType).append(" 0").append(ollirRetType).append(END_STMT);
                 } else {
-                    // Default for any other type
                     code.append("ret").append(ollirRetType).append(" 0").append(ollirRetType).append(END_STMT);
                 }
             }

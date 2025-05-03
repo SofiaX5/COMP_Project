@@ -35,11 +35,19 @@ public class JmmOptimizationImpl implements JmmOptimization {
         var constProp = new ConstPropVisitor();
         var constFold = new ConstFoldVisitor();
 
-        boolean changedProp = false, changedFold = false;
+        boolean changedProp, changedFold;
+        int iterations = 0;
+        final int MAX_ITERATIONS = 10;
+
         do {
             changedProp = constProp.visit(semanticsResult.getRootNode());
             changedFold = constFold.visit(semanticsResult.getRootNode());
-        } while (changedProp || changedFold); // Repeat until no further changes occur
+            iterations++;
+        } while ((changedProp || changedFold) && iterations < MAX_ITERATIONS);
+
+        if (iterations >= MAX_ITERATIONS) {
+            System.out.println("Aviso: Otimização interrompida após " + MAX_ITERATIONS + " iterações.");
+        }
 
         return semanticsResult;
     }
