@@ -173,41 +173,20 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         if (Objects.equals(name, "main")) {
             code.append("ret.V;");
         } else {
-            List<JmmNode> exprs = node.getChildren(EXPR);
+            // Handle methods that aren't void
+            JmmNode exprNode = node.getChild(node.getNumChildren()-1);
+            Type retType = types.getExprType(exprNode, table);
 
-            // Fix: Check if there are return expressions before accessing the first one
-            if (exprs != null && !exprs.isEmpty()) {
-                JmmNode exprNode = exprs.get(0);  // Use get(0) instead of getFirst() for safety
+            var expr = exprVisitor.visit(exprNode);
+            code.append("   ");
+            code.append(expr.getComputation());
+            code.append("ret");
+            code.append(ollirTypes.toOllirType(retType));
+            code.append(SPACE);
 
-                Type retType = types.getExprType(exprNode, table);
+            code.append(expr.getCode());
 
-                var expr = exprVisitor.visit(exprNode);
-                code.append("   ");
-                code.append(expr.getComputation());
-                code.append("ret");
-                code.append(ollirTypes.toOllirType(retType));
-                code.append(SPACE);
-
-                code.append(expr.getCode());
-
-                code.append(END_STMT);
-            } else {
-                // Handle methods with no explicit return expression
-                JmmNode typeNode = node.getChild(0);
-                Type returnType = TypeUtils.convertType(typeNode);
-                String ollirRetType = ollirTypes.toOllirType(returnType);
-
-                if (returnType.isArray() || Objects.equals(returnType.getName(), "String") ||
-                        Objects.equals(returnType.getName(), "Object") || !returnType.getName().equals("int") && !returnType.getName().equals("boolean")) {
-                    code.append("ret").append(ollirRetType).append(" null").append(ollirRetType).append(END_STMT);
-                } else if (returnType.getName().equals("int")) {
-                    code.append("ret").append(ollirRetType).append(" 0").append(ollirRetType).append(END_STMT);
-                } else if (returnType.getName().equals("boolean")) {
-                    code.append("ret").append(ollirRetType).append(" 0").append(ollirRetType).append(END_STMT);
-                } else {
-                    code.append("ret").append(ollirRetType).append(" 0").append(ollirRetType).append(END_STMT);
-                }
-            }
+            code.append(END_STMT);
         }
 
         code.append(R_BRACKET);
@@ -331,6 +310,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                 }
             } else {
                 OllirExprResult lhsExpr = exprVisitor.visit(lhs);
+
                 code.append(lhsExpr.getComputation());
                 code.append(lhsExpr.getCode()).append(SPACE)
                         .append(ASSIGN).append(ollirType).append(SPACE)

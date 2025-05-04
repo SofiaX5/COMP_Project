@@ -30,10 +30,7 @@ public class ConstPropVisitor extends AJmmVisitor<Map<String, JmmNode>, Boolean>
     }
 
     public Boolean visit(JmmNode root) {
-        System.out.println(root.toTree());
-        boolean a = visit(root, new HashMap<>());
-        System.out.println("final" + root.toTree());
-        return a;
+        return visit(root, new HashMap<>());
     }
 
     /*

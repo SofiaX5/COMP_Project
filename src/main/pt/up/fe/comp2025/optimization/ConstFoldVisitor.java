@@ -14,16 +14,10 @@ public class ConstFoldVisitor extends PostorderJmmVisitor<Map<String, JmmNode>, 
     @Override
     protected void buildVisitor() {
         addVisit(Kind.BINARY_EXPR, this::visitBinaryOp);
+        addVisit(Kind.NOT_EXPR, this::visitNot);
         setDefaultVisit(this::defaultVisit);
     }
 
-    private Boolean defaultVisit(JmmNode node, Map<String, JmmNode> context) {
-        boolean changed = false;
-        for (var child : node.getChildren()) {
-            changed |= visit(child, context);
-        }
-        return changed;
-    }
 
     private Boolean visitBinaryOp(JmmNode binOp, Map<String, JmmNode> context) {
         JmmNode left = binOp.getChild(0);
@@ -84,5 +78,33 @@ public class ConstFoldVisitor extends PostorderJmmVisitor<Map<String, JmmNode>, 
         }
 
         return false;
+    }
+
+
+    private Boolean visitNot(JmmNode binOp, Map<String, JmmNode> context) {
+        /*
+        JmmNode left = binOp.getChild(0);
+        JmmNode right = binOp.getChild(1);
+
+        visit(left, context);
+        visit(right, context);
+
+        JmmNode newNode;
+
+        if (left.getKind().equals("IntegerLiteral") && right.getKind().equals("IntegerLiteral")) {
+            String op = binOp.get("op");
+        }
+
+         */
+        return false;
+    }
+
+
+    private Boolean defaultVisit(JmmNode node, Map<String, JmmNode> context) {
+        boolean changed = false;
+        for (var child : node.getChildren()) {
+            changed |= visit(child, context);
+        }
+        return changed;
     }
 }

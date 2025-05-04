@@ -1,0 +1,14 @@
+class While {
+    public boolean foo(){
+      boolean a;
+      int b;
+      a = true;
+      if (a) {b=2;} else {b=3;}
+      return a;
+    }
+    public static void main(String[] args) {
+
+    }
+}
+
+// Result ------------------------------------

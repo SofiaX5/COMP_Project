@@ -19,8 +19,10 @@ public class JmmOptimizationImpl implements JmmOptimization {
             optimizedResult = optimize(semanticsResult);
         }
 
+
         var visitor = new OllirGeneratorVisitor(optimizedResult.getSymbolTable());
         var ollirCode = visitor.visit(optimizedResult.getRootNode());
+
 
         System.out.println("Generated method code: " + ollirCode);
         System.out.println("OLLIR:\n" + ollirCode);
@@ -41,6 +43,7 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
         do {
             changedProp = constProp.visit(semanticsResult.getRootNode());
+            //System.out.println("meudeus" + semanticsResult.getRootNode().toTree() + "deus");
             changedFold = constFold.visit(semanticsResult.getRootNode());
             iterations++;
         } while ((changedProp || changedFold) && iterations < MAX_ITERATIONS);
