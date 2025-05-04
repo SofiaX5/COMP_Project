@@ -1,0 +1,43 @@
+class If {
+    public boolean foo(){
+      boolean a;
+      int b;
+      a = true;
+      if (a) {b=2;} else {b=3;}
+      return a;
+    }
+    public static void main(String[] args) {
+
+    }
+}
+
+// Result ------------------------------------
+If {
+
+
+
+
+.construct If().V {
+    invokespecial(this, "<init>").V;
+}
+
+.method public foo().bool {
+   a.bool :=.bool 1.bool;
+
+   if (1.bool) goto then0;
+b.i32 :=.i32 3.i32;
+
+goto endif0;
+then0:
+b.i32 :=.i32 2.i32;
+
+endif0:
+
+   ret.bool 1.bool;
+}
+
+.method public static main(args.array.String).V {
+   ret.V ;
+}
+
+}

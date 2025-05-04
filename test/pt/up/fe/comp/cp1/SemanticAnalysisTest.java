@@ -117,7 +117,7 @@ public class SemanticAnalysisTest {
     public void incompatibleArguments() {
         var result = TestUtils
                 .analyse(SpecsIo.getResource("pt/up/fe/comp/cp1/semanticanalysis/IncompatibleArguments.jmm"));
-        TestUtils.mustFail(result);
+         TestUtils.mustFail(result);
         System.out.println(result.getReports());
     }
 

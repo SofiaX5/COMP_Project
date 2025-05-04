@@ -21,6 +21,10 @@ public class TypeUtils {
         return new Type("int", false);
     }
 
+    public static Type newBoolType() {
+        return new Type("boolean", false);
+    }
+
 
     public static Type convertType(JmmNode typeNode) {
         var kind = typeNode.getKind();
@@ -47,7 +51,7 @@ public class TypeUtils {
      * @param expr
      * @return
      */
-    //VISTO????????????? temos de ver isto melhor provavelmente, adicionei a symbomtable como param
+
     public static Type getExprType(JmmNode expr, SymbolTable symbolTable) {
         var kind = expr.getKind();
         switch (kind) {

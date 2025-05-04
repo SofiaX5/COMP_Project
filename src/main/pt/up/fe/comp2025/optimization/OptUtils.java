@@ -7,6 +7,7 @@ import pt.up.fe.specs.util.collections.AccumulatorMap;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 
 import static pt.up.fe.comp2025.ast.Kind.TYPE;
+import static pt.up.fe.comp2025.ast.TypeUtils.convertType;
 
 /**
  * Utility methods related to the optimization middle-end.
@@ -17,6 +18,7 @@ public class OptUtils {
     private final AccumulatorMap<String> temporaries;
 
     private final TypeUtils types;
+    private int tempCounter = 0;
 
     public OptUtils(TypeUtils types) {
         this.types = types;
@@ -26,7 +28,7 @@ public class OptUtils {
 
     public String nextTemp() {
 
-        return nextTemp("tmp");
+        return "tmp" + (tempCounter++);
     }
 
     public String nextTemp(String prefix) {
@@ -38,26 +40,25 @@ public class OptUtils {
     }
 
 
-    public String toOllirType(JmmNode typeNode) {
-
+    public static String toOllirType(JmmNode typeNode) {
         TYPE.checkOrThrow(typeNode);
-
-        return toOllirType(types.convertType(typeNode));
+        Type type = convertType(typeNode);
+        return toOllirType(type.getName(), type.isArray());
     }
 
     public String toOllirType(Type type) {
-        return toOllirType(type.getName());
+        return toOllirType(type.getName(), type.isArray());
     }
 
-    private String toOllirType(String typeName) {
-
-        String type = "." + switch (typeName) {
-            case "int" -> "i32";
-            default -> throw new NotImplementedException(typeName);
+    private static String toOllirType(String typeName, boolean isArray) {
+        String baseType = switch (typeName) {
+            case "boolean" -> "bool";
+            case "int"     -> "i32";
+            case "void"    -> "V";
+            case "String"  -> "String";
+            default        -> typeName;
         };
-
-        return type;
+        return (isArray ? ".array" : "") + "." + baseType;
     }
-
 
 }

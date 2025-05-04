@@ -1,0 +1,33 @@
+
+class Folding {
+
+    public static void main(String[] args) {
+        int a;
+        boolean b;
+
+        a = 10 + 20;
+        b = !false;
+
+    }
+
+}
+
+// Result ------------------------------------
+Folding {
+
+
+
+
+.construct Folding().V {
+    invokespecial(this, "<init>").V;
+}
+
+.method public static main(args.array.String).V {
+   a.i32 :=.i32 30.i32;
+
+   b.bool :=.bool 1.bool;
+
+   ret.V ;
+}
+
+}
