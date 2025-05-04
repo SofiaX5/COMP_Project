@@ -146,13 +146,20 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         if (Objects.equals(name, "main")) {
             code.append("static main(args.array.String).V");
-
         } else {
             code.append(name);
+
+
+            boolean hasVarargs = node.hasAttribute("varargs") && node.getBoolean("varargs", false);
 
             // Params
             var params = node.getChild(1);
             code.append(visit(params));
+
+
+            if (hasVarargs) {
+                code.append(" varargs");
+            }
 
             // Type
             var retType = OptUtils.toOllirType(node.getChild(0));
@@ -171,7 +178,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         if (Objects.equals(name, "main")) {
             code.append("ret.V;");
         } else {
-            // Methods that aren't void
             JmmNode exprNode = node.getChild(node.getNumChildren()-1);
             Type retType = types.getExprType(exprNode, table);
 
@@ -190,7 +196,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         code.append(R_BRACKET);
         code.append(NL);
 
-        //System.out.println("Generated method code: " + code.toString());
         return code.toString();
     }
 
@@ -203,14 +208,26 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         code.append("(");
         if (!typeParams.isEmpty()) {
-            for (int i = 0; i < typeParams.size() - 1; i++) {
-                var typeCode = ollirTypes.toOllirType(typeParams.get(i));
-                var name = nameParams.getFirst();
-                code.append(name).append(typeCode).append(", ");
+            for (int i = 0; i < typeParams.size(); i++) {
+                if (i > 0) {
+                    code.append(", ");
+                }
+
+                JmmNode typeNode = typeParams.get(i);
+                var name = nameParams.get(i);
+
+                boolean isVarArgs = typeNode.hasAttribute("isVarArgs") && typeNode.getBoolean("isVarArgs", false);
+
+                if (isVarArgs) {
+                    Type baseType = TypeUtils.convertType(typeNode);
+                    Type arrayType = new Type(baseType.getName(), baseType.isArray() || true);
+                    var typeCode = ollirTypes.toOllirType(arrayType);
+                    code.append(name).append(typeCode);
+                } else {
+                    var typeCode = ollirTypes.toOllirType(typeNode);
+                    code.append(name).append(typeCode);
+                }
             }
-            var typeCode = ollirTypes.toOllirType(typeParams.getLast());
-            var name = nameParams.get(typeParams.size() - 1);
-            code.append(name).append(typeCode);
         }
         code.append(")");
         return code.toString();

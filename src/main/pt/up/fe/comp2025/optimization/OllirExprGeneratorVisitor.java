@@ -156,19 +156,44 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
         boolean isStaticCall = isImportedClass;
 
-        List<String> paramCodes = new ArrayList<>();
-        for (JmmNode param : paramNodes) {
-            OllirExprResult paramResult = visit(param);
-            computation.append(paramResult.getComputation());
+        boolean isVarargsCall = false;
+        if (!isStaticCall && !targetName.equals("this")) {
 
-            String paramCode = paramResult.getCode();
-            if (paramCode.contains("invoke") || paramCode.contains("[") || paramCode.contains("/")) {
-                String tempParam = ollirTypes.nextTemp() + ".i32";
-                computation.append(tempParam).append(" :=.i32 ").append(paramCode).append(";\n");
-                paramCode = tempParam;
+        } else if (table.getMethods().contains(methodName)) {
+            isVarargsCall = table.getParameters(methodName).size() > 0 &&
+                    paramNodes.size() > table.getParameters(methodName).size();
+        }
+
+        List<String> paramCodes = new ArrayList<>();
+
+        if (isVarargsCall) {
+            String arrayTempVar = ollirTypes.nextTemp();
+            computation.append(arrayTempVar).append(".array.i32 :=.array.i32 ");
+            computation.append("new(array, ").append(paramNodes.size()).append(".i32).array.i32").append(END_STMT);
+
+            for (int i = 0; i < paramNodes.size(); i++) {
+                OllirExprResult paramResult = visit(paramNodes.get(i));
+                computation.append(paramResult.getComputation());
+
+                computation.append(arrayTempVar).append("[").append(i).append(".i32].i32 :=.i32 ");
+                computation.append(paramResult.getCode()).append(END_STMT);
             }
 
-            paramCodes.add(paramCode);
+            paramCodes.add(arrayTempVar + ".array.i32");
+        } else {
+            for (JmmNode param : paramNodes) {
+                OllirExprResult paramResult = visit(param);
+                computation.append(paramResult.getComputation());
+
+                String paramCode = paramResult.getCode();
+                if (paramCode.contains("invoke") || paramCode.contains("[") || paramCode.contains("/")) {
+                    String tempParam = ollirTypes.nextTemp() + ".i32";
+                    computation.append(tempParam).append(" :=.i32 ").append(paramCode).append(";\n");
+                    paramCode = tempParam;
+                }
+
+                paramCodes.add(paramCode);
+            }
         }
 
         Type returnType = types.getExprType(node, table);
@@ -206,11 +231,6 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
         return new OllirExprResult(code.toString(), computation.toString());
     }
-
-
-
-
-
 
 
     private OllirExprResult visitNot(JmmNode node, Void unused) {

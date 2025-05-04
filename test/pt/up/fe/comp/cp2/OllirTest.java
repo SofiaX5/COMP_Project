@@ -8,6 +8,7 @@ import org.specs.comp.ollir.OperationType;
 import org.specs.comp.ollir.inst.*;
 import org.specs.comp.ollir.type.BuiltinKind;
 import pt.up.fe.comp.CpUtils;
+import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.specs.util.SpecsIo;
 
@@ -341,8 +342,4 @@ public class OllirTest {
                 .filter(element -> element instanceof ArrayOperand).count();
         CpUtils.assertEquals("Number of array reads", 6, numArrayReads, result);
     }
-
-
-
-
 }
