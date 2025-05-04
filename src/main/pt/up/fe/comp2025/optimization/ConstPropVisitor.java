@@ -10,103 +10,135 @@ import java.util.Map;
 
 import static pt.up.fe.comp2025.ast.Kind.*;
 
-/**
- * Constant Propagation Visitor.
- * Propagates known constant values across assignments and expressions.
- */
+
 public class ConstPropVisitor extends AJmmVisitor<Map<String, JmmNode>, Boolean> {
 
     private final Map<String, JmmNode> constTable = new HashMap<>();
-    private final Map<String, Boolean> constUsed = new HashMap<>();
 
     @Override
     protected void buildVisitor() {
-        //addVisit(METHOD_DECL, this::visitMethod);
         addVisit(ASSIGN_STMT, this::visitAssignment);
         addVisit(VAR_REF_EXPR, this::visitVarRef);
-        addVisit(IF_STMT, this::visitIfStmt);
-        addVisit(WHILE_STMT, this::visitWhileStmt);
+        addVisit(METHOD_DECL, this::visitMethod);
         setDefaultVisit(this::defaultVisit);
     }
 
+
     public Boolean visit(JmmNode root) {
-        return visit(root, new HashMap<>());
-    }
+        constTable.clear();
 
-    /*
-    private Boolean visitMethod(JmmNode method, Map<String, JmmNode> context) {
-        System.out.println("METHOD");
-        boolean changed = false;
-        for (JmmNode stmt : method.getChildren(ASSIGN_STMT)) {
-            changed |= visit(stmt, context);
-        }
+        collectConstants(root);
 
-        for (JmmNode expr : method.getChildren(EXPR)) {
-            changed |= visit(expr, context);
-        }
+        System.out.println("Collected constants: " + constTable);
 
-        System.out.println("Context: " + context);
+        boolean changed = visit(root, new HashMap<>());
 
         return changed;
     }
-     */
 
-    private Boolean visitAssignment(JmmNode assignment, Map<String, JmmNode> context) {
-        System.out.println("ASSIGN");
-        JmmNode lhs = assignment.getChild(0);
-        JmmNode rhs = assignment.getChild(1);
-        System.out.println("SOCORRO" + lhs.getKind() + "   -   " + rhs.getKind());
+    private void collectConstants(JmmNode node) {
+        if (node.getKind().equals(ASSIGN_STMT.toString())) {
+            JmmNode lhs = node.getChild(0);
+            JmmNode rhs = node.getChild(1);
 
-        //visit(rhs, context);
-        if (!lhs.getKind().equals("VarRefExpr") || !lhs.getAttributes().contains("name")) {
-            return false;
+            if (lhs.getKind().equals(VAR_REF_EXPR.toString()) &&
+                    (rhs.getKind().equals(INTEGER_LITERAL.toString()) || rhs.getKind().equals(BOOLEAN_LITERAL.toString()))) {
+
+                String varName = lhs.get("name");
+                JmmNode constNode = new JmmNodeImpl(Collections.singletonList(rhs.getKind()));
+                constNode.put("value", rhs.get("value"));
+                constTable.put(varName, constNode);
+                System.out.println("Found constant: " + varName + " = " + rhs.get("value"));
+            }
         }
 
-        String varName = lhs.get("name");
-        if (rhs.getKind().equals(INTEGER_LITERAL.toString()) || rhs.getKind().equals(BOOLEAN_LITERAL.toString())) {
-            JmmNode newNode = new JmmNodeImpl(Collections.singletonList(rhs.getKind()));
-            newNode.put("value", String.valueOf(rhs.get("value")));
-            System.out.println("ODEIO COMPILADORES" + newNode);
-            context.put(varName, newNode);
+        for (int i = 0; i < node.getNumChildren(); i++) {
+            collectConstants(node.getChild(i));
+        }
+    }
 
-            System.out.println("Propagating constant: " + varName + " = " + rhs.get("value"));
-            return true;
-        } /*else {
-            context.remove(varName);
-        }*/
+    private Boolean visitMethod(JmmNode method, Map<String, JmmNode> context) {
+        boolean changed = false;
 
-        return false;
+        for (int i = 0; i < method.getNumChildren(); i++) {
+            JmmNode child = method.getChild(i);
+            changed |= visit(child, context);
+        }
+
+        for (int i = 0; i < method.getNumChildren(); i++) {
+            JmmNode child = method.getChild(i);
+
+            if (child.getKind().equals(VAR_REF_EXPR.toString()) &&
+                    i > 0 && (method.getChild(i-1).getKind().equals("ReturnToken") ||
+                    child.getAttributes().contains("isReturn"))) {
+
+                String varName = child.get("name");
+                if (constTable.containsKey(varName)) {
+                    JmmNode constNode = constTable.get(varName);
+                    JmmNode newNode = new JmmNodeImpl(Collections.singletonList(constNode.getKind()));
+                    newNode.put("value", constNode.get("value"));
+
+                    child.replace(newNode);
+                    System.out.println("Propagated constant in return: " + varName + " = " + newNode.get("value"));
+                    changed = true;
+                }
+            }
+        }
+
+        return changed;
+    }
+
+    private Boolean visitAssignment(JmmNode assignment, Map<String, JmmNode> context) {
+        JmmNode lhs = assignment.getChild(0);
+        JmmNode rhs = assignment.getChild(1);
+
+        boolean changed = false;
+
+        changed |= visit(rhs, context);
+
+        if (rhs.getKind().equals(VAR_REF_EXPR.toString()) && rhs.getAttributes().contains("name")) {
+            String rhsVarName = rhs.get("name");
+            if (constTable.containsKey(rhsVarName)) {
+                JmmNode constNode = constTable.get(rhsVarName);
+                JmmNode newRhs = new JmmNodeImpl(Collections.singletonList(constNode.getKind()));
+                newRhs.put("value", constNode.get("value"));
+                rhs.replace(newRhs);
+                System.out.println("Propagated constant in assignment: " + rhsVarName + " = " + newRhs.get("value"));
+                changed = true;
+            }
+        }
+
+        return changed;
     }
 
     private Boolean visitVarRef(JmmNode varRef, Map<String, JmmNode> context) {
-        System.out.println("VAR_REF");
+        if (!varRef.getAttributes().contains("name")) {
+            return false;
+        }
+
         String varName = varRef.get("name");
 
-        if (context.containsKey(varName)) {
-            JmmNode newNode = context.get(varName);
+        if (constTable.containsKey(varName)) {
+            JmmNode constNode = constTable.get(varName);
+            JmmNode newNode = new JmmNodeImpl(Collections.singletonList(constNode.getKind()));
+            newNode.put("value", constNode.get("value"));
+
             varRef.replace(newNode);
-            System.out.println("VAR: Propagating constant: " + varName + " = " + newNode);
-            //constUsed.put(varName, true);
+            System.out.println("Propagated constant variable reference: " + varName + " = " + newNode.get("value"));
 
             return true;
         }
 
-        return false;
-    }
-
-    private Boolean visitIfStmt(JmmNode varRef, Map<String, JmmNode> context) {
-        return false;
-    }
-
-    private Boolean visitWhileStmt(JmmNode varRef, Map<String, JmmNode> context) {
         return false;
     }
 
     private Boolean defaultVisit(JmmNode node, Map<String, JmmNode> context) {
         boolean changed = false;
-        for (var child : node.getChildren()) {
-            changed |= visit(child, context);
+
+        for (int i = 0; i < node.getNumChildren(); i++) {
+            changed |= visit(node.getChild(i), context);
         }
+
         return changed;
     }
 }
