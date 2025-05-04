@@ -223,7 +223,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
         JmmNode expr = node.getChild(0);
         OllirExprResult exprResult = visit(expr);
-        code.append(tempVar);
+        code.append(tempVar).append(ollirType);
 
         computation.append(tempVar).append(ollirType)
                 .append(" :=").append(ollirType).append(" !").append(ollirType)

@@ -81,22 +81,23 @@ public class ConstFoldVisitor extends PostorderJmmVisitor<Map<String, JmmNode>, 
     }
 
 
-    private Boolean visitNot(JmmNode binOp, Map<String, JmmNode> context) {
-        /*
-        JmmNode left = binOp.getChild(0);
-        JmmNode right = binOp.getChild(1);
+    private Boolean visitNot(JmmNode notOp, Map<String, JmmNode> context) {
+        JmmNode expr = notOp.getChild(0);
 
-        visit(left, context);
-        visit(right, context);
-
-        JmmNode newNode;
-
-        if (left.getKind().equals("IntegerLiteral") && right.getKind().equals("IntegerLiteral")) {
-            String op = binOp.get("op");
+        if (expr.getKind().equals(Kind.BOOLEAN_LITERAL.toString())) {
+            String value = expr.get("value");
+            JmmNode newNode = new JmmNodeImpl(Collections.singletonList(Kind.BOOLEAN_LITERAL.toString()));
+            if (value.equals("true")) {
+                newNode.putObject("value", "false");
+            } else {
+                newNode.putObject("value", "true");
+            }
+            notOp.replace(newNode);
+            return true;
         }
 
-         */
-        return false;
+        return visit(expr);
+        //return false;
     }
 
 
