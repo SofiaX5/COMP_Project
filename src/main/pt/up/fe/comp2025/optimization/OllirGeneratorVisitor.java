@@ -34,7 +34,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private final OptUtils ollirTypes;
 
     private int ifCount = 0;
-    //static int whileCounter;
+    private int whileCount = 0;
 
 
     private final OllirExprGeneratorVisitor exprVisitor;
@@ -341,8 +341,9 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
         String loopBody = visit(node.getChild(1));
 
-        String whileLabel = "while0";
-        String endLabel = "endwhile0";
+        String whileNum = String.valueOf(whileCount); whileCount+=1;
+        String whileLabel = "while" + whileNum;
+        String endLabel = "endwhile" + whileNum;
 
         code.append(whileLabel).append(":\n");
         code.append(condExpr.getComputation());
