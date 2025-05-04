@@ -293,9 +293,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                 code.append(lhsExpr.getComputation());
                 varName = lhs.get("name");
 
-
-
-
                 JmmNode parent = node.getParent();
                 if (parent.getKind().equals(Kind.METHOD_DECL.toString())) {
                     String methodName = parent.get("name");
@@ -316,13 +313,20 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                 return code.toString();
             }
 
-            String tmp = ollirTypes.nextTemp() + ollirType;
-            code.append(tmp).append(SPACE).append(ASSIGN).append(ollirType).append(SPACE)
-                    .append(rhsExpr.getCode()).append(END_STMT);
+            // Um bocado questionável
+            if (!rhs.getKind().equals(NOT_EXPR.toString())) {
+                String tmp = ollirTypes.nextTemp() + ollirType;
+                code.append(tmp).append(SPACE).append(ASSIGN).append(ollirType).append(SPACE)
+                        .append(rhsExpr.getCode()).append(END_STMT);
 
-            code.append(varName).append(ollirType).append(SPACE)
-                    .append(ASSIGN).append(ollirType).append(SPACE)
-                    .append(tmp).append(END_STMT);
+                code.append(varName).append(ollirType).append(SPACE)
+                        .append(ASSIGN).append(ollirType).append(SPACE)
+                        .append(tmp).append(END_STMT);
+            } else {
+                code.append(varName).append(ollirType).append(SPACE)
+                        .append(ASSIGN).append(ollirType).append(SPACE)
+                        .append(rhsExpr.getCode()).append(END_STMT);
+            }
         }
 
         return code.toString();

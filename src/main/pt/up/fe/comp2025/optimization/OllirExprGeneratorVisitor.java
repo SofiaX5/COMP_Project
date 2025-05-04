@@ -216,18 +216,21 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
     private OllirExprResult visitNot(JmmNode node, Void unused) {
         StringBuilder code = new StringBuilder();
         StringBuilder computation = new StringBuilder();
-        /*
+
         String tempVar = ollirTypes.nextTemp();
         var boolType = TypeUtils.newBoolType();
-        computation.append(tempVar).append(".").append(boolType)
-                .append(" :=.").append(boolType).append(" ")
-                .append(END_STMT);
-        */
+        String ollirType = ollirTypes.toOllirType(boolType);
+
         JmmNode expr = node.getChild(0);
         OllirExprResult exprResult = visit(expr);
-        code.append("!").append(exprResult.getCode());
-        return new OllirExprResult(code.toString());
+        code.append(tempVar);
+
+        computation.append(tempVar).append(ollirType)
+                .append(" :=").append(ollirType).append(" !").append(ollirType)
+                .append(SPACE).append(exprResult.getCode()).append(END_STMT);
+        return new OllirExprResult(code.toString(), computation.toString());
     }
+
 
     private OllirExprResult visitBinExpr(JmmNode node, Void unused) {
         String op = node.get("op");

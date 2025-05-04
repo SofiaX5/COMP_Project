@@ -7,7 +7,7 @@ class Folding {
         boolean b;
 
         a = 10 + 20;
-        b = 10 < 20;
+        b = !false;
 
         io.print(a);
     }
