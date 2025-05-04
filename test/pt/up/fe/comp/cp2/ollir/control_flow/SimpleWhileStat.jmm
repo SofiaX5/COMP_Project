@@ -8,10 +8,7 @@ class SimpleWhileStat {
         i = 0;
 
         while (i < a) {
-            while (i < a) {
             i = i + 1;
-            }
-            i = 5;
         }
 
         return i;

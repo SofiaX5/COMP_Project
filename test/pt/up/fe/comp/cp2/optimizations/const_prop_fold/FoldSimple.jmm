@@ -1,34 +1,15 @@
 import io;
 
-
-
 class Folding {
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
         int a;
-        int b;
-        int sum;
-        int diff;
-        int prod;
-        int div;
-        int mod;
-        boolean c;
-        boolean d;
-        int result;
+        boolean b;
 
-        a = 10;
-        b = 20;
-        sum = a + b;
-        diff = a - b;
-        prod = a * b;
-        div = a / b;
-        c = true;
-        d = false;
+        a = 10 + 20;
+        b = 10 < 20;
 
-        mod = a - (a / b);
-
-
-        result = sum + diff + prod + div + mod;
-}
+        io.print(a);
+    }
 
 }
