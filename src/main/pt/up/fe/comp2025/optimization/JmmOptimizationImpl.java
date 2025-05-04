@@ -30,7 +30,9 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
     @Override
     public JmmSemanticsResult optimize(JmmSemanticsResult semanticsResult) {
-        // AST Optimizations: Constant Propagation and Constant Folding
+        if (semanticsResult.getConfig().getOrDefault("optimize", "false").equals("false")) {
+            return semanticsResult;
+        }
 
         var constProp = new ConstPropVisitor();
         var constFold = new ConstFoldVisitor();
@@ -41,12 +43,16 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
         do {
             changedProp = constProp.visit(semanticsResult.getRootNode());
-            changedFold = constFold.visit(semanticsResult.getRootNode());
+            changedFold = constFold.visit(semanticsResult.getRootNode(), Collections.emptyMap());
             iterations++;
+
+            if (changedProp || changedFold) {
+                System.out.println("AST changed during optimization iteration " + iterations);
+            }
         } while ((changedProp || changedFold) && iterations < MAX_ITERATIONS);
 
         if (iterations >= MAX_ITERATIONS) {
-            System.out.println("Aviso: Otimização interrompida após " + MAX_ITERATIONS + " iterações.");
+            System.out.println("Warning: Optimization stopped after " + MAX_ITERATIONS + " iterations.");
         }
 
         return semanticsResult;
