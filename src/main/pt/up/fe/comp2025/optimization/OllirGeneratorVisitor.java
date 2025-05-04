@@ -315,13 +315,15 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
             // Um bocado questionável
             if (!rhs.getKind().equals(NOT_EXPR.toString())) {
+                /*
                 String tmp = ollirTypes.nextTemp() + ollirType;
                 code.append(tmp).append(SPACE).append(ASSIGN).append(ollirType).append(SPACE)
                         .append(rhsExpr.getCode()).append(END_STMT);
+                 */
 
                 code.append(varName).append(ollirType).append(SPACE)
                         .append(ASSIGN).append(ollirType).append(SPACE)
-                        .append(tmp).append(END_STMT);
+                        .append(rhsExpr.getCode()).append(END_STMT);
             } else {
                 code.append(varName).append(ollirType).append(SPACE)
                         .append(ASSIGN).append(ollirType).append(SPACE)
