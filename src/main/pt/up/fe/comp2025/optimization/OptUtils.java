@@ -56,6 +56,7 @@ public class OptUtils {
             case "int"     -> "i32";
             case "void"    -> "V";
             case "String"  -> "String";
+            case "vararg"  -> "i32";
             default        -> typeName;
         };
         return (isArray ? ".array" : "") + "." + baseType;
