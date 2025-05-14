@@ -8,6 +8,7 @@ import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.specs.util.SpecsCheck;
 import pt.up.fe.specs.util.exceptions.NotImplementedException;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,16 +27,31 @@ public class JasminUtils {
         //this.typeMap.put("[", "[?????");
     }
 
-    public String getType(Method method) {
+    public String getReturnType(Method method) {
         String type = (method.getReturnType()).toString().toLowerCase();
-        System.out.println("Method Type: "+type);
+        System.out.println("Method Return Type: "+type);
         return this.typeMap.get(type);
     }
+    public String getParamType(Method method) {
+        ArrayList params = method.getParams();
+        String types = "";
+        for (int i = 0; i < params.size(); i++) {
+            String type = params.get(i).toString().toLowerCase();
+            if (type.contains(".")) {
+                type = type.substring(type.lastIndexOf('.') + 1);
+            }
+            System.out.println("Method Param Type: "+type);
+            types += this.typeMap.get(type);
+        }
+        return types;
+    }
 
-    public String getType(AssignInstruction instruction) {
+    public String getAssignType(AssignInstruction instruction) {
         String type = (instruction.getTypeOfAssign()).toString().toLowerCase();
+        System.out.println("Instruction Type: "+type);
         return this.typeMap.get(type).toLowerCase();
     }
+
     //V-Void
     //B-Byte
     //C-char
@@ -47,6 +63,7 @@ public class JasminUtils {
     //S-short
     //Z-boolean
     //[-reference (array)
+
 
 
     public String getModifier(AccessModifier accessModifier) {

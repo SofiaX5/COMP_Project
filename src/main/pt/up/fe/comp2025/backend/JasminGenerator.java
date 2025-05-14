@@ -141,16 +141,24 @@ public class JasminGenerator {
 
         var methodName = method.getMethodName();
 
-        String jasminType = types.getType(method);
-        System.out.println("jasminType: " + jasminType);
+        String jasminReturnType = types.getReturnType(method);
+        System.out.println("jasminReturnType: " + jasminReturnType);
+
+        String jasminParamTypes = types.getParamType(method);
+        System.out.println("jasminParamType: " + jasminParamTypes);
+
 
         // TODO: Hardcoded param types and return type, needs to be expanded
-        var params = "I";
+        /*var params = "I";
         var returnType = "I";
 
         code.append("\n.method ").append(modifier)
                 .append(methodName)
                 .append("(" + params + ")" + returnType).append(NL);
+        */
+        code.append("\n.method ").append(modifier)
+                .append(methodName)
+                .append("(" + jasminParamTypes + ")" + jasminReturnType).append(NL);
 
         // Add limits
         code.append(TAB).append(".limit stack 99").append(NL);
@@ -189,6 +197,12 @@ public class JasminGenerator {
         // get register
         var reg = currentMethod.getVarTable().get(operand.getName());
 
+
+        String jasminType = types.getAssignType(assign);
+        System.out.println("jasminType: " + jasminType);
+
+        System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA " + assign.getRhs().getInstType().toString());
+        System.out.println("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB " + assign.getRhs().toString());
 
         // TODO: Hardcoded for int type, needs to be expanded
         code.append("istore ").append(reg.getVirtualReg()).append(NL);
@@ -238,6 +252,7 @@ public class JasminGenerator {
         var code = new StringBuilder();
 
         // TODO: Hardcoded for int type, needs to be expanded
+
         code.append("ireturn").append(NL);
 
         return code.toString();
