@@ -141,6 +141,9 @@ public class JasminGenerator {
 
         var methodName = method.getMethodName();
 
+        String jasminType = types.getType(method);
+        System.out.println("jasminType: " + jasminType);
+
         // TODO: Hardcoded param types and return type, needs to be expanded
         var params = "I";
         var returnType = "I";
