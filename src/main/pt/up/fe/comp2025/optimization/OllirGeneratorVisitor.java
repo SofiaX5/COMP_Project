@@ -147,19 +147,24 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         if (Objects.equals(name, "main")) {
             code.append("static main(args.array.String).V");
         } else {
+            boolean hasVarargs = false;
+            var paramNodes = node.getChild(1).getChildren(TYPE);
+            for (JmmNode paramNode : paramNodes) {
+                if (paramNode.hasAttribute("isEllipsis") && paramNode.getBoolean("isEllipsis", false)) {
+                    hasVarargs = true;
+                    break;
+                }
+            }
+
+            if (hasVarargs) {
+                code.append("varargs ");
+            }
+
             code.append(name);
-
-
-            boolean hasVarargs = node.hasAttribute("varargs") && node.getBoolean("varargs", false);
 
             // Params
             var params = node.getChild(1);
             code.append(visit(params));
-
-
-            if (hasVarargs) {
-                code.append(" varargs");
-            }
 
             // Type
             var retType = OptUtils.toOllirType(node.getChild(0));
@@ -200,6 +205,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
 
+
     private String visitParam(JmmNode node, Void unused) {
         StringBuilder code = new StringBuilder();
 
@@ -216,17 +222,16 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                 JmmNode typeNode = typeParams.get(i);
                 var name = nameParams.get(i);
 
-                boolean isVarArgs = typeNode.hasAttribute("isVarArgs") && typeNode.getBoolean("isVarArgs", false);
+                boolean isVarArgs = typeNode.hasAttribute("isEllipsis") && typeNode.getBoolean("isEllipsis", false);
 
-                if (isVarArgs) {
-                    Type baseType = TypeUtils.convertType(typeNode);
-                    Type arrayType = new Type(baseType.getName(), baseType.isArray() || true);
-                    var typeCode = ollirTypes.toOllirType(arrayType);
-                    code.append(name).append(typeCode);
-                } else {
-                    var typeCode = ollirTypes.toOllirType(typeNode);
-                    code.append(name).append(typeCode);
+                Type baseType = TypeUtils.convertType(typeNode);
+
+                if (isVarArgs && !baseType.isArray()) {
+                    baseType = new Type(baseType.getName(), true);
                 }
+
+                var typeCode = ollirTypes.toOllirType(baseType);
+                code.append(name).append(typeCode);
             }
         }
         code.append(")");
