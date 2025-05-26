@@ -1,9 +1,6 @@
 package pt.up.fe.comp2025.backend;
 
-import org.specs.comp.ollir.ClassUnit;
-import org.specs.comp.ollir.LiteralElement;
-import org.specs.comp.ollir.Method;
-import org.specs.comp.ollir.Operand;
+import org.specs.comp.ollir.*;
 import org.specs.comp.ollir.inst.AssignInstruction;
 import org.specs.comp.ollir.inst.BinaryOpInstruction;
 import org.specs.comp.ollir.inst.ReturnInstruction;
@@ -107,7 +104,7 @@ public class JasminGenerator {
         code.append(".super ").append(fullSuperClass).append(NL).append(NL);
 
         for (var field : classUnit.getFields()) {
-            //code.append(generateField(field));
+            code.append(generateField(field));
         }
 
         boolean hasConstructor = classUnit.getMethods().stream()
@@ -143,7 +140,17 @@ public class JasminGenerator {
     }
 
 
+    private String generateField(Field field) {
+        var code = new StringBuilder();
+        var modifier = types.getModifier(field.getFieldAccessModifier());
+        var fieldType = types.convertType(field.getFieldType());
 
+        code.append(".field ").append(modifier)
+                .append(field.getFieldName()).append(" ")
+                .append(fieldType).append(NL);
+
+        return code.toString();
+    }
 
     private String generateMethod(Method method) {
         //System.out.println("STARTING METHOD " + method.getMethodName());
@@ -180,9 +187,9 @@ public class JasminGenerator {
                 .append(methodName)
                 .append("(" + jasminParamTypes + ")" + jasminReturnType).append(NL);
 
-        // Add limits
-        code.append(TAB).append(".limit stack 99").append(NL);
-        code.append(TAB).append(".limit locals 99").append(NL);
+        var stackSimulator = new StackSimulator(method, types);
+        code.append(TAB).append(".limit stack ").append(stackSimulator.getMaxStackSize()).append(NL);
+        code.append(TAB).append(".limit locals ").append(stackSimulator.getMaxLocals()).append(NL);
 
         for (var inst : method.getInstructions()) {
             var instCode = StringLines.getLines(apply(inst)).stream()
