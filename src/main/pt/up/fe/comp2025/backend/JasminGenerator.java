@@ -65,9 +65,11 @@ public class JasminGenerator {
         var code = new StringBuilder();
 
         // Print the corresponding OLLIR code as a comment
-        //code.append("; ").append(node).append(NL);
-
+        code.append("; ").append(node).append(NL);
         code.append(generators.apply(node));
+        System.out.println("JASMIN????");
+        System.out.println(code.toString());
+
 
         return code.toString();
     }
@@ -78,10 +80,10 @@ public class JasminGenerator {
     }
 
     public String build() {
-
         // This way, build is idempotent
         if (code == null) {
             code = apply(ollirResult.getOllirClass());
+
         }
 
         return code;
@@ -95,7 +97,7 @@ public class JasminGenerator {
         // generate class name
         var className = ollirResult.getOllirClass().getClassName();
         code.append(".class ").append(className).append(NL).append(NL);
-
+        System.out.println("CCCCCCCCCCCCCCCCC");
         // TODO: When you support 'extends', this must be updated
         var fullSuperClass = "java/lang/Object";
 
@@ -124,7 +126,6 @@ public class JasminGenerator {
 
             code.append(apply(method));
         }
-
         return code.toString();
     }
 
