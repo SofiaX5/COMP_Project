@@ -234,15 +234,14 @@ public class JasminGenerator {
     }
 
     private String generateLiteral(LiteralElement literal) {
-        return "ldc " + literal.getLiteral() + NL;
+        return types.getOptimizedConstant(literal.getLiteral()) + NL;
     }
 
     private String generateOperand(Operand operand) {
-        // get register
         var reg = currentMethod.getVarTable().get(operand.getName());
+        String jasminType = types.convertType(operand.getType());
 
-        // TODO: Hardcoded for int type, needs to be expanded
-        return "iload " + reg.getVirtualReg() + NL;
+        return types.getOptimizedLoad(jasminType, reg.getVirtualReg()) + NL;
     }
 
     private String generateBinaryOp(BinaryOpInstruction binaryOp) {
