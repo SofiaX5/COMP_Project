@@ -1,10 +1,7 @@
 package pt.up.fe.comp2025.backend;
 
 import org.specs.comp.ollir.*;
-import org.specs.comp.ollir.inst.AssignInstruction;
-import org.specs.comp.ollir.inst.BinaryOpInstruction;
-import org.specs.comp.ollir.inst.ReturnInstruction;
-import org.specs.comp.ollir.inst.SingleOpInstruction;
+import org.specs.comp.ollir.inst.*;
 import org.specs.comp.ollir.tree.TreeNode;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.report.Report;
@@ -56,6 +53,8 @@ public class JasminGenerator {
         generators.put(Operand.class, this::generateOperand);
         generators.put(BinaryOpInstruction.class, this::generateBinaryOp);
         generators.put(ReturnInstruction.class, this::generateReturn);
+        generators.put(PutFieldInstruction.class, this::generatePutField);
+        generators.put(GetFieldInstruction.class, this::generateGetField);
     }
 
     private String apply(TreeNode node) {
@@ -284,6 +283,41 @@ public class JasminGenerator {
         // TODO: Hardcoded for int type, needs to be expanded
 
         code.append(types.getReturnInstruction(currentMethod.getReturnType())).append(NL);
+        return code.toString();
+    }
+
+    private String generatePutField(PutFieldInstruction putField) {
+        var code = new StringBuilder();
+
+        // Load the object reference (this)
+        code.append(apply(putField.getOperands().get(0)));
+
+        // Load the value to be stored
+        code.append(apply(putField.getOperands().get(1)));
+
+        // Generate putfield instruction
+        var field = (Operand) putField.getOperands().get(0);
+        var fieldName = putField.getField().getName();
+        var fieldType = types.convertType(putField.getField().getType());
+        var className = ollirResult.getOllirClass().getClassName();
+
+        code.append("putfield ").append(className).append("/").append(fieldName)
+                .append(" ").append(fieldType).append(NL);
+
+        return code.toString();
+    }
+    private String generateGetField(GetFieldInstruction getField) {
+        var code = new StringBuilder();
+
+        code.append(apply(getField.getOperands().get(0)));
+
+        var fieldName = getField.getField().getName();
+        var fieldType = types.convertType(getField.getField().getType());
+        var className = ollirResult.getOllirClass().getClassName();
+
+        code.append("getfield ").append(className).append("/").append(fieldName)
+                .append(" ").append(fieldType).append(NL);
+
         return code.toString();
     }
 }
