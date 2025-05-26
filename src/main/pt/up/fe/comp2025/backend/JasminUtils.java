@@ -149,4 +149,39 @@ public class JasminUtils {
     }
 
 
+    public String getTypePrefix(Type type) {
+        String jasminType = convertType(type);
+        if ("I".equals(jasminType) || "Z".equals(jasminType)) {
+            return "i";
+        } else if ("F".equals(jasminType)) {
+            return "f";
+        } else if ("D".equals(jasminType)) {
+            return "d";
+        } else if ("J".equals(jasminType)) {
+            return "l";
+        } else if (jasminType.startsWith("L") || jasminType.startsWith("[")) {
+            return "a";
+        }
+        return "i";
+    }
+
+    public String getReturnInstruction(Type returnType) {
+        String jasminType = convertType(returnType);
+        if ("V".equals(jasminType)) {
+            return "return";
+        } else if ("I".equals(jasminType) || "Z".equals(jasminType)) {
+            return "ireturn";
+        } else if ("F".equals(jasminType)) {
+            return "freturn";
+        } else if ("D".equals(jasminType)) {
+            return "dreturn";
+        } else if ("J".equals(jasminType)) {
+            return "lreturn";
+        } else if (jasminType.startsWith("L") || jasminType.startsWith("[")) {
+            return "areturn";
+        }
+        return "return";
+    }
+
+
 }

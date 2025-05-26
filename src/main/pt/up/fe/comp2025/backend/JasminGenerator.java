@@ -202,10 +202,8 @@ public class JasminGenerator {
     private String generateAssign(AssignInstruction assign) {
         var code = new StringBuilder();
 
-        // generate code for loading what's on the right
         code.append(apply(assign.getRhs()));
 
-        // store value in the stack in destination
         var lhs = assign.getDest();
 
         if (!(lhs instanceof Operand)) {
@@ -214,7 +212,6 @@ public class JasminGenerator {
 
         var operand = (Operand) lhs;
 
-        // get register
         var reg = currentMethod.getVarTable().get(operand.getName());
 
 
@@ -247,20 +244,25 @@ public class JasminGenerator {
     private String generateBinaryOp(BinaryOpInstruction binaryOp) {
         var code = new StringBuilder();
 
-        // load values on the left and on the right
         code.append(apply(binaryOp.getLeftOperand()));
         code.append(apply(binaryOp.getRightOperand()));
 
         // TODO: Hardcoded for int type, needs to be expanded
-        var typePrefix = "i";
+        var typePrefix = types.getTypePrefix(binaryOp.getLeftOperand().getType());
 
-        // apply operation
         var op = switch (binaryOp.getOperation().getOpType()) {
             case ADD -> "add";
+            case SUB -> "sub";
             case MUL -> "mul";
+            case DIV -> "div";
+            case AND -> "and";
+            case OR -> "or";
+            case XOR -> "xor";
+            case SHL -> "shl";
+            case SHR -> "shr";
+            case REM -> "rem";
             default -> throw new NotImplementedException(binaryOp.getOperation().getOpType());
         };
-
         code.append(typePrefix + op).append(NL);
 
         return code.toString();
@@ -269,10 +271,12 @@ public class JasminGenerator {
     private String generateReturn(ReturnInstruction returnInst) {
         var code = new StringBuilder();
 
+        if (returnInst.hasReturnValue()) {
+            code.append(apply(returnInst.getOperand().get()));
+        }
         // TODO: Hardcoded for int type, needs to be expanded
 
-        code.append("ireturn").append(NL);
-
+        code.append(types.getReturnInstruction(currentMethod.getReturnType())).append(NL);
         return code.toString();
     }
 }
