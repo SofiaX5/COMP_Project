@@ -28,28 +28,24 @@ public class JasminUtils {
     }
 
     public String getReturnType(Method method) {
-        String type = (method.getReturnType()).toString().toLowerCase();
-        System.out.println("Method Return Type: "+type);
-        return this.typeMap.get(type);
+        String type = convertType(method.getReturnType());
+        System.out.println("Method Return Type: "+ type);
+        return type;
     }
     public String getParamType(Method method) {
-        ArrayList params = method.getParams();
-        String types = "";
-        for (int i = 0; i < params.size(); i++) {
-            String type = params.get(i).toString().toLowerCase();
-            if (type.contains(".")) {
-                type = type.substring(type.lastIndexOf('.') + 1);
-            }
-            System.out.println("Method Param Type: "+type);
-            types += this.typeMap.get(type);
+        StringBuilder types = new StringBuilder();
+        for (Element param : method.getParams()) {
+            String type = convertType(param.getType());
+            types.append(type);
+            System.out.println("Param Type: "+ type);
         }
-        return types;
+        return types.toString();
     }
 
     public String getAssignType(AssignInstruction instruction) {
-        String type = (instruction.getTypeOfAssign()).toString().toLowerCase();
+        String type = convertType(instruction.getTypeOfAssign());
         System.out.println("Instruction Type: "+type);
-        return this.typeMap.get(type).toLowerCase();
+        return type;
     }
 
     //V-Void
@@ -64,6 +60,16 @@ public class JasminUtils {
     //Z-boolean
     //[-reference (array)
 
+    public String convertType(Type type) {
+        if (type instanceof ArrayType) {
+            return "[" + convertType(((ArrayType) type).getElementType());
+        } else if (type instanceof ClassType) {
+            return "L" + ((ClassType) type).getName().replace(".", "/") + ";";
+        } else {
+            String typeStr = type.toString().toLowerCase();
+            return typeMap.getOrDefault(typeStr, "Ljava/lang/Object;");
+        }
+    }
 
 
     public String getModifier(AccessModifier accessModifier) {
