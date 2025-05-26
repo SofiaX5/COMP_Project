@@ -95,24 +95,37 @@ public class JasminGenerator {
         var code = new StringBuilder();
 
         // generate class name
-        var className = ollirResult.getOllirClass().getClassName();
-        code.append(".class ").append(className).append(NL).append(NL);
-        System.out.println("CCCCCCCCCCCCCCCCC");
+        var className = classUnit.getClassName();
+        code.append(".class public ").append(className).append(NL);        System.out.println("CCCCCCCCCCCCCCCCC");
         // TODO: When you support 'extends', this must be updated
         var fullSuperClass = "java/lang/Object";
 
-        code.append(".super ").append(fullSuperClass).append(NL);
+        if (classUnit.getSuperClass() != null) {
+            fullSuperClass = classUnit.getSuperClass().replace(".", "/");
+        }
+
+        code.append(".super ").append(fullSuperClass).append(NL).append(NL);
+
+        for (var field : classUnit.getFields()) {
+            //code.append(generateField(field));
+        }
+
+        boolean hasConstructor = classUnit.getMethods().stream()
+                .anyMatch(Method::isConstructMethod);
 
         // generate a single constructor method
-        var defaultConstructor = """
-                ;default constructor
-                .method public <init>()V
-                    aload_0
-                    invokespecial %s/<init>()V
-                    return
-                .end method
-                """.formatted(fullSuperClass);
-        code.append(defaultConstructor);
+        if (!hasConstructor) {
+            var defaultConstructor = """
+                    ;default constructor
+                    .method public <init>()V
+                        aload_0
+                        invokespecial %s/<init>()V
+                        return
+                    .end method
+                    """.formatted(fullSuperClass);
+            code.append(defaultConstructor);
+            }
+
 
         // generate code for all other methods
         for (var method : ollirResult.getOllirClass().getMethods()) {
@@ -130,6 +143,8 @@ public class JasminGenerator {
     }
 
 
+
+
     private String generateMethod(Method method) {
         //System.out.println("STARTING METHOD " + method.getMethodName());
         // set method
@@ -138,7 +153,11 @@ public class JasminGenerator {
         var code = new StringBuilder();
 
         // calculate modifier
+        //var stackSimulator = new StackSimulator(method);
         var modifier = types.getModifier(method.getMethodAccessModifier());
+        if (method.isStaticMethod()) {
+            modifier += "static ";
+        }
 
         var methodName = method.getMethodName();
 
@@ -199,14 +218,13 @@ public class JasminGenerator {
         var reg = currentMethod.getVarTable().get(operand.getName());
 
 
-        String jasminType = types.getAssignType(assign);
-        System.out.println("jasminType: " + jasminType);
+        String jasminType = types.convertType(assign.getTypeOfAssign());        System.out.println("jasminType: " + jasminType);
 
         System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA " + assign.getRhs().getInstType().toString());
         System.out.println("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB " + assign.getRhs().toString());
 
         // TODO: Hardcoded for int type, needs to be expanded
-        code.append("istore ").append(reg.getVirtualReg()).append(NL);
+        code.append(types.getOptimizedStore(jasminType, reg.getVirtualReg())).append(NL);
 
         return code.toString();
     }

@@ -77,4 +77,76 @@ public class JasminUtils {
                 accessModifier.name().toLowerCase() + " " :
                 "";
     }
+
+    //jasmin optim.
+
+    public String getOptimizedLoad(String type, int register) {
+        if ("I".equals(type) || "Z".equals(type)) {
+            return switch (register) {
+                case 0 -> "iload_0";
+                case 1 -> "iload_1";
+                case 2 -> "iload_2";
+                case 3 -> "iload_3";
+                default -> "iload " + register;
+            };
+        } else if (type.startsWith("L") || type.startsWith("[")) {
+            return switch (register) {
+                case 0 -> "aload_0";
+                case 1 -> "aload_1";
+                case 2 -> "aload_2";
+                case 3 -> "aload_3";
+                default -> "aload " + register;
+            };
+        }
+        return "iload " + register;
+    }
+
+    public String getOptimizedStore(String type, int register) {
+        if ("I".equals(type) || "Z".equals(type)) {
+            return switch (register) {
+                case 0 -> "istore_0";
+                case 1 -> "istore_1";
+                case 2 -> "istore_2";
+                case 3 -> "istore_3";
+                default -> "istore " + register;
+            };
+        } else if (type.startsWith("L") || type.startsWith("[")) {
+            return switch (register) {
+                case 0 -> "astore_0";
+                case 1 -> "astore_1";
+                case 2 -> "astore_2";
+                case 3 -> "astore_3";
+                default -> "astore " + register;
+            };
+        }
+        return "istore " + register;
+    }
+
+    public String getOptimizedConstant(String literal) {
+        try {
+            int value = Integer.parseInt(literal);
+            return switch (value) {
+                case -1 -> "iconst_m1";
+                case 0 -> "iconst_0";
+                case 1 -> "iconst_1";
+                case 2 -> "iconst_2";
+                case 3 -> "iconst_3";
+                case 4 -> "iconst_4";
+                case 5 -> "iconst_5";
+                default -> {
+                    if (value >= -128 && value <= 127) {
+                        yield "bipush " + value;
+                    } else if (value >= -32768 && value <= 32767) {
+                        yield "sipush " + value;
+                    } else {
+                        yield "ldc " + value;
+                    }
+                }
+            };
+        } catch (NumberFormatException e) {
+            return "ldc " + literal;
+        }
+    }
+
+
 }
