@@ -39,6 +39,24 @@ public class UndeclaredVariable extends AnalysisVisitor {
         addVisit(Kind.CLASS_DECL, this::visitClassDecl);
         addVisit(Kind.NOT_EXPR, this::visitUnaryExpr);
         addVisit(Kind.BINARY_EXPR, this::visitBinaryExpr);
+        addVisit(Kind.METHOD_CALL_EXPR, this::visitMethodCall);
+    }
+
+    private Void visitMethodCall(JmmNode methodCall, SymbolTable table) {
+        if (Objects.equals(currentMethod, "main")) {
+            JmmNode caller = methodCall.getChild(0);
+            if (caller.getKind().equals("ThisExpr")) {
+                var message = "Found 'this' inside static method";
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        methodCall.getLine(),
+                        methodCall.getColumn(),
+                        message,
+                        null
+                ));
+            }
+        }
+        return null;
     }
 
     private Void visitBinaryExpr(JmmNode binaryExpr, SymbolTable table) {
@@ -211,6 +229,24 @@ public class UndeclaredVariable extends AnalysisVisitor {
             if (!paramNames.add(param.getName())) {
                 addReport(Report.newError(Stage.SEMANTIC, method.getLine(), method.getColumn(),
                         "Duplicated parameter: " + param.getName(), null));
+            }
+            
+            // Add vararg validation
+            if (Objects.equals(param.getType().getName(), "vararg")) {
+                int varargsBeforeLastParam = 0;
+                List<Symbol> params = table.getParameters(currentMethod);
+                int lastIndex = params.size() - 1;
+                
+                for (int i = 0; i < lastIndex; i++) {
+                    if (Objects.equals(params.get(i).getType().getName(), "vararg")) {
+                        varargsBeforeLastParam++;
+                    }
+                }
+                
+                if (varargsBeforeLastParam > 0) {
+                    addReport(Report.newError(Stage.SEMANTIC, method.getLine(), method.getColumn(),
+                            "Found " + varargsBeforeLastParam + " vararg parameter(s) before the last parameter. Vararg parameter must be the last parameter.", null));
+                }
             }
         }
 
