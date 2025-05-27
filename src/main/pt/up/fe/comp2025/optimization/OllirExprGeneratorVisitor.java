@@ -250,6 +250,10 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
                 code.append(", ").append(paramCode);
             }
 
+            JmmNode smtm = node.getParent();
+            returnType = types.getExprType(smtm.getChildren().getFirst(), table);
+            ollirRetType = ollirTypes.toOllirType(returnType);
+
             code.append(")").append(ollirRetType);
         }
 
