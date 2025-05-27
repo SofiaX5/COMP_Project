@@ -81,7 +81,8 @@ public class StackSimulator {
     }
 
     private void simulateCallInstruction(CallInstruction call) {
-        if (!call.getReturnType().toString().equals("invokestatic")) {
+        // Check if it's not a static call and if there are arguments before accessing getFirst()
+        if (!call.getReturnType().toString().equals("invokestatic") && !call.getArguments().isEmpty()) {
             simulateElement(call.getArguments().getFirst());
         }
 
