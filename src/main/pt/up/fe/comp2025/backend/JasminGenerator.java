@@ -64,6 +64,7 @@ public class JasminGenerator {
         generators.put(OpCondInstruction.class, this::generateOpCond);
         generators.put(GotoInstruction.class, this::generateGoto);
         generators.put(InvokeStaticInstruction.class, this::generateInvokeStatic);
+        generators.put(SingleOpCondInstruction.class, this::generateSingleOpCond);
 
     }
 
@@ -231,7 +232,8 @@ public class JasminGenerator {
         var reg = currentMethod.getVarTable().get(operand.getName());
 
 
-        String jasminType = types.convertType(assign.getTypeOfAssign());        System.out.println("jasminType: " + jasminType);
+        String jasminType = types.convertType(assign.getTypeOfAssign());
+        System.out.println("jasminType: " + jasminType);
 
         System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA " + assign.getRhs().getInstType().toString());
         System.out.println("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB " + assign.getRhs().toString());
@@ -275,10 +277,35 @@ public class JasminGenerator {
         code.append(apply(binaryOp.getLeftOperand()));
         code.append(apply(binaryOp.getRightOperand()));
 
-        // TODO: Hardcoded for int type, needs to be expanded
+        var opType = binaryOp.getOperation().getOpType();
+
+        if (opType == LTH || opType == GTH || opType == LTE || opType == GTE || opType == EQ || opType == NEQ) {
+            var label1 = "label_" + System.currentTimeMillis() + "_true";
+            var label2 = "label_" + System.currentTimeMillis() + "_end";
+
+            String jumpInstruction = switch (opType) {
+                case LTH -> "if_icmplt";
+                case GTH -> "if_icmpgt";
+                case LTE -> "if_icmple";
+                case GTE -> "if_icmpge";
+                case EQ -> "if_icmpeq";
+                case NEQ -> "if_icmpne";
+                default -> throw new NotImplementedException(opType);
+            };
+
+            code.append(jumpInstruction).append(" ").append(label1).append(NL);
+            code.append("iconst_0").append(NL);
+            code.append("goto ").append(label2).append(NL);
+            code.append(label1).append(":").append(NL);
+            code.append("iconst_1").append(NL);
+            code.append(label2).append(":").append(NL);
+
+            return code.toString();
+        }
+
         var typePrefix = types.getTypePrefix(binaryOp.getLeftOperand().getType());
 
-        var op = switch (binaryOp.getOperation().getOpType()) {
+        var op = switch (opType) {
             case ADD -> "add";
             case SUB -> "sub";
             case MUL -> "mul";
@@ -289,7 +316,7 @@ public class JasminGenerator {
             case SHL -> "shl";
             case SHR -> "shr";
             case REM -> "rem";
-            default -> throw new NotImplementedException(binaryOp.getOperation().getOpType());
+            default -> throw new NotImplementedException(opType);
         };
         code.append(typePrefix + op).append(NL);
 
@@ -492,5 +519,75 @@ public class JasminGenerator {
 
         return code.toString();
     }
+
+    private String generateSingleOpCond(SingleOpCondInstruction singleOpCond) {
+        var code = new StringBuilder();
+
+        var operand = (Operand) singleOpCond.getOperands().getFirst();
+        for (var inst : currentMethod.getInstructions()) {
+            if (inst instanceof AssignInstruction) {
+                var assign = (AssignInstruction) inst;
+                if (assign.getDest() instanceof Operand) {
+                    var dest = (Operand) assign.getDest();
+                    if (dest.getName().equals(operand.getName()) &&
+                            assign.getRhs() instanceof BinaryOpInstruction) {
+                        var binaryOp = (BinaryOpInstruction) assign.getRhs();
+                        var opType = binaryOp.getOperation().getOpType();
+
+                        if ((opType == LTH || opType == GTH || opType == LTE ||
+                                opType == GTE || opType == EQ || opType == NEQ)) {
+
+                            boolean isComparingWithZero = false;
+                            Element nonZeroOperand = null;
+
+                            if (binaryOp.getRightOperand() instanceof LiteralElement) {
+                                var literal = (LiteralElement) binaryOp.getRightOperand();
+                                if ("0".equals(literal.getLiteral())) {
+                                    isComparingWithZero = true;
+                                    nonZeroOperand = binaryOp.getLeftOperand();
+                                }
+                            } else if (binaryOp.getLeftOperand() instanceof LiteralElement) {
+                                var literal = (LiteralElement) binaryOp.getLeftOperand();
+                                if ("0".equals(literal.getLiteral())) {
+                                    isComparingWithZero = true;
+                                    nonZeroOperand = binaryOp.getRightOperand();
+                                    opType = switch (opType) {
+                                        case LTH -> GTH;
+                                        case GTH -> LTH;
+                                        case LTE -> GTE;
+                                        case GTE -> LTE;
+                                        default -> opType;
+                                    };
+                                }
+                            }
+
+                            if (isComparingWithZero && nonZeroOperand != null) {
+                                code.append(apply(nonZeroOperand));
+                                String jumpInstruction = switch (opType) {
+                                    case LTH -> "iflt";
+                                    case GTH -> "ifgt";
+                                    case LTE -> "ifle";
+                                    case GTE -> "ifge";
+                                    case EQ -> "ifeq";
+                                    case NEQ -> "ifne";
+                                    default -> throw new NotImplementedException(opType);
+                                };
+
+                                code.append(jumpInstruction).append(" ").append(singleOpCond.getLabel()).append(NL);
+                                return code.toString();
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        code.append(apply(singleOpCond.getOperands().getFirst()));
+        code.append("ifne ").append(singleOpCond.getLabel()).append(NL);
+
+        return code.toString();
+    }
+
 
 }
