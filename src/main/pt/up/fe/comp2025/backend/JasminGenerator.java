@@ -68,7 +68,7 @@ public class JasminGenerator {
         generators.put(SingleOpCondInstruction.class, this::generateSingleOpCond);
         generators.put(ArrayLengthInstruction.class, this::generateArrayLength);
         generators.put(InvokeVirtualInstruction.class, this::generateInvokeVirtual);
-
+        generators.put(UnaryOpInstruction.class, this::generateUnaryOp);
     }
 
     private String apply(TreeNode node) {
@@ -739,25 +739,47 @@ public class JasminGenerator {
     private String generateInvokeVirtual(InvokeVirtualInstruction invokeVirtual) {
         var code = new StringBuilder();
 
-        code.append(apply(invokeVirtual.getOperands().getFirst()));
+        code.append(apply(invokeVirtual.getCaller()));
 
-        for (int i = 1; i < invokeVirtual.getOperands().size(); i++) {
-            code.append(apply(invokeVirtual.getOperands().get(i)));
+        for (Element arg : invokeVirtual.getArguments()) {
+            code.append(apply(arg));
         }
 
-        var methodName = ((LiteralElement) invokeVirtual.getMethodName()).getLiteral().replace("\"", "");        var className = types.convertType(invokeVirtual.getArguments().getFirst().getType())
+        var className = types.convertType(invokeVirtual.getCaller().getType())
                 .replace("L", "")
                 .replace(";", "");
 
+
+        var methodName = ((LiteralElement) invokeVirtual.getMethodName()).getLiteral().replace("\"", "");
+
         var paramTypes = new StringBuilder();
-        for (int i = 1; i < invokeVirtual.getOperands().size(); i++) {
-            paramTypes.append(types.convertType(invokeVirtual.getOperands().get(i).getType()));
+        for (Element arg : invokeVirtual.getArguments()) {
+            paramTypes.append(types.convertType(arg.getType()));
         }
 
         var returnType = types.convertType(invokeVirtual.getReturnType());
 
         code.append("invokevirtual ").append(className).append("/").append(methodName)
                 .append("(").append(paramTypes).append(")").append(returnType).append(NL);
+
+        return code.toString();
+    }
+    private String generateUnaryOp(UnaryOpInstruction unaryOp) {
+        var code = new StringBuilder();
+
+        code.append(apply(unaryOp.getOperand()));
+
+        var opType = unaryOp.getOperation().getOpType();
+
+        switch (opType) {
+            case NOT:
+            case NOTB:
+                code.append("iconst_1").append(NL);
+                code.append("ixor").append(NL);
+                break;
+            default:
+                throw new NotImplementedException("Unary operation not yet implemented: " + opType);
+        }
 
         return code.toString();
     }
