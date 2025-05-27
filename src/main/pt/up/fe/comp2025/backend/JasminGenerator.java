@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.specs.comp.ollir.OperationType.*;
+
 /**
  * Generates Jasmin code from an OllirResult.
  * <p>
@@ -58,6 +60,10 @@ public class JasminGenerator {
         generators.put(GetFieldInstruction.class, this::generateGetField);
         generators.put(NewInstruction.class, this::generateNew);
         generators.put(InvokeSpecialInstruction.class, this::generateInvokeSpecial);
+        generators.put(OpCondInstruction.class, this::generateOpCond);
+        generators.put(GotoInstruction.class, this::generateGoto);
+        generators.put(InvokeStaticInstruction.class, this::generateInvokeStatic);
+
     }
 
     private String apply(TreeNode node) {
@@ -244,9 +250,21 @@ public class JasminGenerator {
     }
 
     private String generateOperand(Operand operand) {
-        var reg = currentMethod.getVarTable().get(operand.getName());
-        String jasminType = types.convertType(operand.getType());
+        var operandName = operand.getName();
+        var reg = currentMethod.getVarTable().get(operandName);
 
+        if (reg == null) {
+            var baseName = operandName.contains(".") ? operandName.substring(0, operandName.indexOf(".")) : operandName;
+            reg = currentMethod.getVarTable().get(baseName);
+        }
+
+        if (reg == null) {
+            throw new RuntimeException("Variable not found in symbol table: " + operandName +
+                    " (tried both full name and base name). Available variables: " +
+                    currentMethod.getVarTable().keySet());
+        }
+
+        String jasminType = types.convertType(operand.getType());
         return types.getOptimizedLoad(jasminType, reg.getVirtualReg()) + NL;
     }
 
@@ -372,4 +390,62 @@ public class JasminGenerator {
 
         return code.toString();
     }
+
+    private String generateOpCond(OpCondInstruction opCond) {
+        var code = new StringBuilder();
+
+        code.append(apply(opCond.getOperands().getFirst()));
+        code.append(apply(opCond.getOperands().getLast()));
+
+        var op = opCond.getCondition().getOperation().getOpType();
+        String jumpInstruction = switch (op) {
+            case LTH -> "if_icmplt";
+            case GTH -> "if_icmpgt";
+            case LTE -> "if_icmple";
+            case GTE -> "if_icmpge";
+            case EQ -> "if_icmpeq";
+            case NEQ -> "if_icmpne";
+            default -> throw new NotImplementedException(op);
+        };
+
+        var labels = opCond.getLabel();
+        code.append(jumpInstruction).append(" ").append(labels).append(NL);
+
+        return code.toString();
+    }
+
+    private String generateGoto(GotoInstruction gotoInst) {
+        return "goto " + gotoInst.getLabel() + NL;
+    }
+
+
+    private String generateInvokeStatic(InvokeStaticInstruction invokeStatic) {
+        var code = new StringBuilder();
+
+        for (Element operand : invokeStatic.getOperands()) {
+            code.append(apply(operand));
+        }
+
+        String className;
+        if (invokeStatic.getArguments().get(0) instanceof LiteralElement) {
+            className = ((LiteralElement) invokeStatic.getArguments().get(0)).getLiteral().replace("\"", "");
+        } else {
+            className = invokeStatic.getArguments().get(0).toString();
+        }
+
+        var methodName = ((LiteralElement) invokeStatic.getArguments().get(1)).getLiteral().replace("\"", "");
+
+        var paramTypes = new StringBuilder();
+        for (Element operand : invokeStatic.getOperands()) {
+            paramTypes.append(types.convertType(operand.getType()));
+        }
+
+        var returnType = types.convertType(invokeStatic.getReturnType());
+
+        code.append("invokestatic ").append(className).append("/").append(methodName)
+                .append("(").append(paramTypes).append(")").append(returnType).append(NL);
+
+        return code.toString();
+    }
+
 }
