@@ -216,8 +216,123 @@ public class JasminGenerator {
         return code.toString();
     }
 
+    //esta funçao ta kinda caotica secalhar dá para melhorar !!!!!!!!!!!!!!!!!!!!!!
     private String generateAssign(AssignInstruction assign) {
         var code = new StringBuilder();
+
+        if (assign.getRhs() instanceof BinaryOpInstruction) {
+            var binaryOp = (BinaryOpInstruction) assign.getRhs();
+            if (binaryOp.getOperation().getOpType() == ADD) {
+                var lhs = assign.getDest();
+                if (lhs instanceof Operand) {
+                    var destOperand = (Operand) lhs;
+                    var destReg = currentMethod.getVarTable().get(destOperand.getName());
+
+                    if (binaryOp.getLeftOperand() instanceof Operand) {
+                        var leftOperand = (Operand) binaryOp.getLeftOperand();
+                        var leftReg = currentMethod.getVarTable().get(leftOperand.getName());
+
+                        if (binaryOp.getRightOperand() instanceof LiteralElement &&
+                                destReg != null && leftReg != null &&
+                                destReg.getVirtualReg() == leftReg.getVirtualReg()) {
+
+                            var literal = (LiteralElement) binaryOp.getRightOperand();
+                            try {
+                                int increment = Integer.parseInt(literal.getLiteral());
+                                if (increment >= -128 && increment <= 127) {
+                                    code.append("iinc ").append(destReg.getVirtualReg()).append(" ").append(increment).append(NL);
+                                    return code.toString();
+                                }
+                            } catch (NumberFormatException e) {
+                            }
+                        }
+                    }
+
+                    if (binaryOp.getRightOperand() instanceof Operand) {
+                        var rightOperand = (Operand) binaryOp.getRightOperand();
+                        var rightReg = currentMethod.getVarTable().get(rightOperand.getName());
+
+                        if (binaryOp.getLeftOperand() instanceof LiteralElement &&
+                                destReg != null && rightReg != null &&
+                                destReg.getVirtualReg() == rightReg.getVirtualReg()) {
+
+                            var literal = (LiteralElement) binaryOp.getLeftOperand();
+                            try {
+                                int increment = Integer.parseInt(literal.getLiteral());
+                                if (increment >= -128 && increment <= 127) {
+                                    code.append("iinc ").append(destReg.getVirtualReg()).append(" ").append(increment).append(NL);
+                                    return code.toString();
+                                }
+                            } catch (NumberFormatException e) {
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (assign.getRhs() instanceof SingleOpInstruction) {
+            var singleOp = (SingleOpInstruction) assign.getRhs();
+            if (singleOp.getSingleOperand() instanceof Operand) {
+                var tempOperand = (Operand) singleOp.getSingleOperand();
+                var lhs = assign.getDest();
+
+                if (lhs instanceof Operand) {
+                    var destOperand = (Operand) lhs;
+                    var destReg = currentMethod.getVarTable().get(destOperand.getName());
+
+                    for (var inst : currentMethod.getInstructions()) {
+                        if (inst instanceof AssignInstruction) {
+                            var tempAssign = (AssignInstruction) inst;
+                            if (tempAssign.getDest() instanceof Operand) {
+                                var tempDest = (Operand) tempAssign.getDest();
+                                if (tempDest.getName().equals(tempOperand.getName()) &&
+                                        tempAssign.getRhs() instanceof BinaryOpInstruction) {
+
+                                    var binaryOp = (BinaryOpInstruction) tempAssign.getRhs();
+                                    if (binaryOp.getOperation().getOpType() == ADD) {
+
+                                        if (binaryOp.getLeftOperand() instanceof Operand) {
+                                            var leftOperand = (Operand) binaryOp.getLeftOperand();
+                                            if (leftOperand.getName().equals(destOperand.getName()) &&
+                                                    binaryOp.getRightOperand() instanceof LiteralElement) {
+
+                                                var literal = (LiteralElement) binaryOp.getRightOperand();
+                                                try {
+                                                    int increment = Integer.parseInt(literal.getLiteral());
+                                                    if (increment >= -128 && increment <= 127) {
+                                                        code.append("iinc ").append(destReg.getVirtualReg()).append(" ").append(increment).append(NL);
+                                                        return code.toString();
+                                                    }
+                                                } catch (NumberFormatException e) {
+                                                }
+                                            }
+                                        }
+
+                                        if (binaryOp.getRightOperand() instanceof Operand) {
+                                            var rightOperand = (Operand) binaryOp.getRightOperand();
+                                            if (rightOperand.getName().equals(destOperand.getName()) &&
+                                                    binaryOp.getLeftOperand() instanceof LiteralElement) {
+
+                                                var literal = (LiteralElement) binaryOp.getLeftOperand();
+                                                try {
+                                                    int increment = Integer.parseInt(literal.getLiteral());
+                                                    if (increment >= -128 && increment <= 127) {
+                                                        code.append("iinc ").append(destReg.getVirtualReg()).append(" ").append(increment).append(NL);
+                                                        return code.toString();
+                                                    }
+                                                } catch (NumberFormatException e) {
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         code.append(apply(assign.getRhs()));
 
@@ -230,7 +345,6 @@ public class JasminGenerator {
         var operand = (Operand) lhs;
 
         var reg = currentMethod.getVarTable().get(operand.getName());
-
 
         String jasminType = types.convertType(assign.getTypeOfAssign());
         System.out.println("jasminType: " + jasminType);
