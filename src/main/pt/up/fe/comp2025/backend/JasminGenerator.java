@@ -3,6 +3,7 @@ package pt.up.fe.comp2025.backend;
 import org.specs.comp.ollir.*;
 import org.specs.comp.ollir.inst.*;
 import org.specs.comp.ollir.tree.TreeNode;
+import org.specs.comp.ollir.type.ArrayType;
 import org.specs.comp.ollir.type.ClassType;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.report.Report;
@@ -342,14 +343,58 @@ public class JasminGenerator {
     private String generateNew(NewInstruction newInst) {
         var code = new StringBuilder();
 
-        var classType = (ClassType) newInst.getReturnType();
-        var className = classType.getName().replace(".", "/");
+        if (newInst.getReturnType() instanceof ArrayType) {
+            var arrayType = (ArrayType) newInst.getReturnType();
 
-        code.append("new ").append(className).append(NL);
-        code.append("dup").append(NL);
+            boolean foundSize = false;
+            for (Element operand : newInst.getOperands()) {
+                if (operand instanceof Operand && ((Operand) operand).getName().equals("array")) {
+                    continue;
+                }
+                code.append(apply(operand));
+                foundSize = true;
+                break;
+            }
+
+            if (!foundSize) {
+                throw new RuntimeException("Could not find array size in new instruction operands");
+            }
+
+            var elementType = arrayType.getElementType();
+            String jasminElementType = types.convertType(elementType);
+
+            if ("I".equals(jasminElementType)) {
+                code.append("newarray int").append(NL);
+            } else if ("Z".equals(jasminElementType)) {
+                code.append("newarray boolean").append(NL);
+            } else if ("C".equals(jasminElementType)) {
+                code.append("newarray char").append(NL);
+            } else if ("F".equals(jasminElementType)) {
+                code.append("newarray float").append(NL);
+            } else if ("D".equals(jasminElementType)) {
+                code.append("newarray double").append(NL);
+            } else if ("J".equals(jasminElementType)) {
+                code.append("newarray long").append(NL);
+            } else if ("B".equals(jasminElementType)) {
+                code.append("newarray byte").append(NL);
+            } else if ("S".equals(jasminElementType)) {
+                code.append("newarray short").append(NL);
+            } else {
+                code.append("anewarray ").append(jasminElementType.replace("L", "").replace(";", "")).append(NL);
+            }
+        } else if (newInst.getReturnType() instanceof ClassType) {
+            var classType = (ClassType) newInst.getReturnType();
+            var className = classType.getName().replace(".", "/");
+
+            code.append("new ").append(className).append(NL);
+            code.append("dup").append(NL);
+        } else {
+            throw new RuntimeException("Unsupported type for new instruction: " + newInst.getReturnType().getClass());
+        }
 
         return code.toString();
     }
+
     private String generateInvokeSpecial(InvokeSpecialInstruction invokeSpecial) {
         var code = new StringBuilder();
 
