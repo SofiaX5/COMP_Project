@@ -13,6 +13,7 @@ import pt.up.fe.specs.util.utilities.StringLines;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.specs.comp.ollir.OperationType.*;
@@ -195,15 +196,26 @@ public class JasminGenerator {
                 .append(methodName)
                 .append("(" + params + ")" + returnType).append(NL);
         */
-        code.append("\n.method ").append(modifier)
-                .append(methodName)
-                .append("(" + jasminParamTypes + ")" + jasminReturnType).append(NL);
+        code.append("\n.method ").append(types.getModifier(method.getMethodAccessModifier()));
+        if (method.isStaticMethod()) {
+            code.append("static ");
+        }
+        code.append(method.getMethodName())
+                .append("(").append(types.getParamType(method)).append(")")
+                .append(types.getReturnType(method)).append(NL);
 
         var stackSimulator = new StackSimulator(method, types);
         code.append(TAB).append(".limit stack ").append(stackSimulator.getMaxStackSize()).append(NL);
         code.append(TAB).append(".limit locals ").append(stackSimulator.getMaxLocals()).append(NL);
 
         for (var inst : method.getInstructions()) {
+            for (Map.Entry<String, Instruction> entry : method.getLabels().entrySet()) {
+                if (entry.getValue() == inst) {
+                    code.append(entry.getKey()).append(":").append(NL);
+                    break;
+                }
+            }
+
             var instCode = StringLines.getLines(apply(inst)).stream()
                     .collect(Collectors.joining(NL + TAB, TAB, NL));
 
@@ -211,10 +223,7 @@ public class JasminGenerator {
         }
 
         code.append(".end method\n");
-
-        // unset method
         currentMethod = null;
-        //System.out.println("ENDING METHOD " + method.getMethodName());
         return code.toString();
     }
 
@@ -610,22 +619,34 @@ public class JasminGenerator {
     private String generateInvokeStatic(InvokeStaticInstruction invokeStatic) {
         var code = new StringBuilder();
 
-        for (Element operand : invokeStatic.getOperands()) {
-            code.append(apply(operand));
+        for (Element argument : invokeStatic.getArguments()) {
+            if (!(argument instanceof LiteralElement && (argument.equals(invokeStatic.getCaller()) || argument.equals(invokeStatic.getMethodName())))) {
+                code.append(apply(argument));
+            }
         }
 
         String className;
-        if (invokeStatic.getArguments().get(0) instanceof LiteralElement) {
-            className = ((LiteralElement) invokeStatic.getArguments().get(0)).getLiteral().replace("\"", "");
-        } else {
-            className = invokeStatic.getArguments().get(0).toString();
+        if (invokeStatic.getCaller() instanceof LiteralElement) {
+            className = ((LiteralElement) invokeStatic.getCaller()).getLiteral().replace("\"", "");
+        } else if (invokeStatic.getCaller() instanceof Operand) {
+            // If it's an Operand representing a class, get its name directly.
+            className = ((Operand) invokeStatic.getCaller()).getName();
+            // If the name is like "Class.method", just get "Class"
+            if (className.contains(".")) {
+                className = className.substring(0, className.lastIndexOf("."));
+            }
+        }
+        else {
+            // Fallback for other types, might need more specific handling
+            className = invokeStatic.getCaller().toString().replace(".", "/");
         }
 
-        var methodName = ((LiteralElement) invokeStatic.getArguments().get(1)).getLiteral().replace("\"", "");
+        var methodName = ((LiteralElement) invokeStatic.getMethodName()).getLiteral().replace("\"", "");
 
         var paramTypes = new StringBuilder();
-        for (Element operand : invokeStatic.getOperands()) {
-            paramTypes.append(types.convertType(operand.getType()));
+        // Build parameter types from the actual arguments, not all operands
+        for (Element argument : invokeStatic.getArguments()) {
+            paramTypes.append(types.convertType(argument.getType()));
         }
 
         var returnType = types.convertType(invokeStatic.getReturnType());

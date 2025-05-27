@@ -64,9 +64,16 @@ public class JasminUtils {
         if (type instanceof ArrayType) {
             return "[" + convertType(((ArrayType) type).getElementType());
         } else if (type instanceof ClassType) {
-            return "L" + ((ClassType) type).getName().replace(".", "/") + ";";
+            String className = ((ClassType) type).getName();
+            if (className.equals("String")) {
+                return "Ljava/lang/String;";
+            }
+            return "L" + className.replace(".", "/") + ";";
         } else {
             String typeStr = type.toString().toLowerCase();
+            if (typeStr.equals("string")) {
+                return "Ljava/lang/String;";
+            }
             return typeMap.getOrDefault(typeStr, "Ljava/lang/Object;");
         }
     }
