@@ -65,6 +65,8 @@ public class JasminGenerator {
         generators.put(GotoInstruction.class, this::generateGoto);
         generators.put(InvokeStaticInstruction.class, this::generateInvokeStatic);
         generators.put(SingleOpCondInstruction.class, this::generateSingleOpCond);
+        generators.put(ArrayLengthInstruction.class, this::generateArrayLength);
+        generators.put(InvokeVirtualInstruction.class, this::generateInvokeVirtual);
 
     }
 
@@ -703,5 +705,41 @@ public class JasminGenerator {
         return code.toString();
     }
 
+    private String generateArrayLength(ArrayLengthInstruction arrayLength) {
+        var code = new StringBuilder();
+
+        code.append(apply(arrayLength.getOperands().getFirst()));
+
+        code.append("arraylength").append(NL);
+
+        return code.toString();
+    }
+
+    private String generateInvokeVirtual(InvokeVirtualInstruction invokeVirtual) {
+        var code = new StringBuilder();
+
+        code.append(apply(invokeVirtual.getOperands().getFirst()));
+
+        for (int i = 1; i < invokeVirtual.getOperands().size(); i++) {
+            code.append(apply(invokeVirtual.getOperands().get(i)));
+        }
+
+        var methodName = ((LiteralElement) invokeVirtual.getArguments().get(1)).getLiteral().replace("\"", "");
+        var className = types.convertType(invokeVirtual.getArguments().getFirst().getType())
+                .replace("L", "")
+                .replace(";", "");
+
+        var paramTypes = new StringBuilder();
+        for (int i = 1; i < invokeVirtual.getOperands().size(); i++) {
+            paramTypes.append(types.convertType(invokeVirtual.getOperands().get(i).getType()));
+        }
+
+        var returnType = types.convertType(invokeVirtual.getReturnType());
+
+        code.append("invokevirtual ").append(className).append("/").append(methodName)
+                .append("(").append(paramTypes).append(")").append(returnType).append(NL);
+
+        return code.toString();
+    }
 
 }

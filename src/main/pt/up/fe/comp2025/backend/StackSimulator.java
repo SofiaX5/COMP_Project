@@ -71,7 +71,12 @@ public class StackSimulator {
             simulateUnaryOpInstruction((UnaryOpInstruction) instruction);
         } else if (instruction instanceof SingleOpInstruction) {
             simulateSingleOpInstruction((SingleOpInstruction) instruction);
+        } else if (instruction instanceof ArrayLengthInstruction) {
+            simulateArrayLengthInstruction((ArrayLengthInstruction) instruction);
+        } else if (instruction instanceof InvokeVirtualInstruction) {
+            simulateInvokeVirtualInstruction((InvokeVirtualInstruction) instruction);
         }
+
     }
 
     private void simulateAssignInstruction(AssignInstruction assign) {
@@ -81,7 +86,6 @@ public class StackSimulator {
     }
 
     private void simulateCallInstruction(CallInstruction call) {
-        // Check if it's not a static call and if there are arguments before accessing getFirst()
         if (!call.getReturnType().toString().equals("invokestatic") && !call.getArguments().isEmpty()) {
             simulateElement(call.getArguments().getFirst());
         }
@@ -171,5 +175,25 @@ public class StackSimulator {
 
     private void popStack(int count) {
         currentStackSize = Math.max(0, currentStackSize - count);
+    }
+
+    private void simulateArrayLengthInstruction(ArrayLengthInstruction arrayLength) {
+        simulateElement(arrayLength.getOperands().getFirst());
+        popStack(1);
+        pushStack(1);
+    }
+
+    private void simulateInvokeVirtualInstruction(InvokeVirtualInstruction invokeVirtual) {
+        simulateElement(invokeVirtual.getOperands().getFirst());
+
+        for (int i = 1; i < invokeVirtual.getOperands().size(); i++) {
+            simulateElement(invokeVirtual.getOperands().get(i));
+        }
+
+        popStack(invokeVirtual.getOperands().size());
+
+        if (!jasminUtils.convertType(invokeVirtual.getReturnType()).equals("V")) {
+            pushStack(1);
+        }
     }
 }
