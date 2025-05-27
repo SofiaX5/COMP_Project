@@ -3,6 +3,7 @@ package pt.up.fe.comp2025.backend;
 import org.specs.comp.ollir.*;
 import org.specs.comp.ollir.inst.*;
 import org.specs.comp.ollir.tree.TreeNode;
+import org.specs.comp.ollir.type.ClassType;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.specs.util.classmap.FunctionClassMap;
@@ -55,6 +56,8 @@ public class JasminGenerator {
         generators.put(ReturnInstruction.class, this::generateReturn);
         generators.put(PutFieldInstruction.class, this::generatePutField);
         generators.put(GetFieldInstruction.class, this::generateGetField);
+        generators.put(NewInstruction.class, this::generateNew);
+        generators.put(InvokeSpecialInstruction.class, this::generateInvokeSpecial);
     }
 
     private String apply(TreeNode node) {
@@ -289,13 +292,10 @@ public class JasminGenerator {
     private String generatePutField(PutFieldInstruction putField) {
         var code = new StringBuilder();
 
-        // Load the object reference (this)
         code.append(apply(putField.getOperands().get(0)));
 
-        // Load the value to be stored
         code.append(apply(putField.getOperands().get(1)));
 
-        // Generate putfield instruction
         var field = (Operand) putField.getOperands().get(0);
         var fieldName = putField.getField().getName();
         var fieldType = types.convertType(putField.getField().getType());
@@ -317,6 +317,58 @@ public class JasminGenerator {
 
         code.append("getfield ").append(className).append("/").append(fieldName)
                 .append(" ").append(fieldType).append(NL);
+
+        return code.toString();
+    }
+
+    private String generateNew(NewInstruction newInst) {
+        var code = new StringBuilder();
+
+        var classType = (ClassType) newInst.getReturnType();
+        var className = classType.getName().replace(".", "/");
+
+        code.append("new ").append(className).append(NL);
+        code.append("dup").append(NL);
+
+        return code.toString();
+    }
+    private String generateInvokeSpecial(InvokeSpecialInstruction invokeSpecial) {
+        var code = new StringBuilder();
+
+        if (invokeSpecial.getArguments().isEmpty()) {
+            if (!invokeSpecial.getOperands().isEmpty()) {
+                code.append(apply(invokeSpecial.getOperands().getFirst()));
+            }
+
+            var className = "java/lang/Object";
+            if (invokeSpecial.getReturnType() instanceof org.specs.comp.ollir.type.ClassType) {
+                var classType = (org.specs.comp.ollir.type.ClassType) invokeSpecial.getReturnType();
+                className = classType.getName().replace(".", "/");
+            }
+
+            code.append("invokespecial ").append(className).append("/<init>()V").append(NL);
+            return code.toString();
+        }
+
+        code.append(apply(invokeSpecial.getArguments().getFirst()));
+
+        for (Element arg : invokeSpecial.getOperands()) {
+            code.append(apply(arg));
+        }
+
+        var methodName = ((LiteralElement) invokeSpecial.getArguments().get(1)).getLiteral().replace("\"", "");
+        var className = invokeSpecial.getArguments().getFirst().getType();
+        var jasminClassName = types.convertType(className).replace("L", "").replace(";", "");
+
+        var paramTypes = new StringBuilder();
+        for (Element operand : invokeSpecial.getOperands()) {
+            paramTypes.append(types.convertType(operand.getType()));
+        }
+
+        var returnType = types.convertType(invokeSpecial.getReturnType());
+
+        code.append("invokespecial ").append(jasminClassName).append("/").append(methodName)
+                .append("(").append(paramTypes).append(")").append(returnType).append(NL);
 
         return code.toString();
     }
