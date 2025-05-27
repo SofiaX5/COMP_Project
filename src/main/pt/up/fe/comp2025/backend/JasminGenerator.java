@@ -724,8 +724,7 @@ public class JasminGenerator {
             code.append(apply(invokeVirtual.getOperands().get(i)));
         }
 
-        var methodName = ((LiteralElement) invokeVirtual.getArguments().get(1)).getLiteral().replace("\"", "");
-        var className = types.convertType(invokeVirtual.getArguments().getFirst().getType())
+        var methodName = ((LiteralElement) invokeVirtual.getMethodName()).getLiteral().replace("\"", "");        var className = types.convertType(invokeVirtual.getArguments().getFirst().getType())
                 .replace("L", "")
                 .replace(";", "");
 
