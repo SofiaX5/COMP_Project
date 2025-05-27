@@ -129,15 +129,15 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
     }
 
     private OllirExprResult visitMethodCall(JmmNode node, Void unused) {
-        StringBuilder computation = new StringBuilder();
         StringBuilder code = new StringBuilder();
+        StringBuilder computation = new StringBuilder();
 
         JmmNode target = node.getChild(0);
         String methodName = node.get("name");
         List<JmmNode> paramNodes = node.getChildren().subList(1, node.getNumChildren());
 
         String targetName;
-        boolean isImportedClass = false;
+        boolean isStaticCall = false;
 
         if (target.getKind().equals("ThisExpr")) {
             targetName = "this";
@@ -145,16 +145,37 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
             targetName = target.get("name");
 
             for (String importStr : table.getImports()) {
+                // REVER
                 String simpleImport = importStr.contains(".") ?
                         importStr.substring(importStr.lastIndexOf('.') + 1) : importStr;
                 if (simpleImport.equals(targetName)) {
-                    isImportedClass = true;
+                    isStaticCall = true;
                     break;
                 }
             }
         }
 
-        boolean isStaticCall = isImportedClass;
+        /* QUESTIONÁVEL REVER (E APAGAR O QUE ESTÁ EM BAIXO
+        boolean isVarargsCall = false;
+        if (!isStaticCall && (targetName.equals("this") || table.getClassName().equals(targetName))) {
+            if (table.getMethods().contains(methodName)) {
+                List<Symbol> paramsMethod = table.getParameters(methodName);
+
+                if (!paramNodes.isEmpty()) {
+                    Type lastParam = paramsMethod.get(paramsMethod.size() - 1).getType();
+
+                    if (lastParam.isArray()) { // Como obtenho o jmmnode me vez do type :(
+                    EM PROCESSO
+                    if (numArgs < params.size() && !Objects.equals(params.getFirst().getType(), new Type("vararg", true))) {
+
+                        if (paramNodes.size() >= paramTypes.size()) {
+                            isVarargsCall = true;
+                        }
+                    }
+                }
+            }
+        }
+         */
 
         boolean isVarargsCall = false;
         if (!isStaticCall && !targetName.equals("this")) {
@@ -164,7 +185,12 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
                     paramNodes.size() > table.getParameters(methodName).size();
         }
 
+
+
         List<String> paramCodes = new ArrayList<>();
+
+        Type returnType = types.getExprType(node, table);
+        String ollirRetType = ollirTypes.toOllirType(returnType);
 
         if (isVarargsCall) {
             String arrayTempVar = ollirTypes.nextTemp();
@@ -180,6 +206,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
             }
 
             paramCodes.add(arrayTempVar + ".array.i32");
+
         } else {
             for (JmmNode param : paramNodes) {
                 OllirExprResult paramResult = visit(param);
@@ -196,9 +223,6 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
             }
         }
 
-        Type returnType = types.getExprType(node, table);
-        String ollirRetType = ollirTypes.toOllirType(returnType);
-
         if (isStaticCall) {
             code.append("invokestatic(")
                     .append(targetName).append(", \"").append(methodName).append("\"");
@@ -212,7 +236,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
             OllirExprResult targetResult;
 
             if (targetName.equals("this")) {
-                targetResult = new OllirExprResult("this", "");
+                targetResult = new OllirExprResult("this."+table.getClassName(), "");
             } else {
                 targetResult = visit(target);
                 computation.append(targetResult.getComputation());
