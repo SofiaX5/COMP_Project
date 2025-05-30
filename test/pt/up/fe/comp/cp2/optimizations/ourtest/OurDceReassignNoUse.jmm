@@ -1,0 +1,11 @@
+class OurDceReassignNoUse {
+    public int testReassignDce() {
+        int a;
+        a = 1; // Dead
+        a = 2; // Dead
+        a = 3; // Dead
+        return 5;
+    }
+    public static void main(String[] args) {
+    }
+}

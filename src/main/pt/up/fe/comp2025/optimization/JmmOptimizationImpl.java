@@ -36,20 +36,22 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
         var constProp = new ConstPropVisitor();
         var constFold = new ConstFoldVisitor();
+        var deadCodeElim = new DeadCodeElimination(semanticsResult.getSymbolTable());
 
-        boolean changedProp, changedFold;
+        boolean changedProp, changedFold, changedDCE;
         int iterations = 0;
         final int MAX_ITERATIONS = 10;
 
         do {
             changedProp = constProp.visit(semanticsResult.getRootNode());
-            changedFold = constFold.visit(semanticsResult.getRootNode(), Collections.emptyMap());
+            changedFold = constFold.visit(semanticsResult.getRootNode(), new HashMap<>()); // <--- FIX: Use new HashMap<>()
+            changedDCE = deadCodeElim.visit(semanticsResult.getRootNode(), new HashMap<>()); // <--- FIX: Use new HashMap<>()
             iterations++;
 
-            if (changedProp || changedFold) {
+            if (changedProp || changedFold || changedDCE) { // Also include changedDCE in print condition
                 System.out.println("AST changed during optimization iteration " + iterations);
             }
-        } while ((changedProp || changedFold) && iterations < MAX_ITERATIONS);
+        } while ((changedProp || changedFold || changedDCE) && iterations < MAX_ITERATIONS);
 
         if (iterations >= MAX_ITERATIONS) {
             System.out.println("Warning: Optimization stopped after " + MAX_ITERATIONS + " iterations.");

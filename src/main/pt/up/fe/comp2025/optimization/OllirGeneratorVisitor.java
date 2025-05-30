@@ -63,6 +63,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         addVisit(ASSIGN_STMT, this::visitAssignStmt);
         addVisit(WHILE_STMT, this::visitWhileStmt);
         addVisit(ARRAY_ASSIGN_STMT, this::visitArrayAssignStmt);
+        addVisit(NOOP_STMT, this::visitNoopStmt);
 
         setDefaultVisit(this::defaultVisit);
     }
@@ -398,6 +399,10 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                 .append(valueExpr.getCode()).append(END_STMT);
 
         return code.toString();
+    }
+
+    private String visitNoopStmt(JmmNode node, Void unused) {
+        return "";
     }
 
 
