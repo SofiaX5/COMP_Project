@@ -1,0 +1,15 @@
+class PropOneBranch {
+    public int foo(){
+        int a;
+        int b;
+        a = 7;
+        b = 10;
+        if (b < 15) {
+            a = 8;
+        }
+        else {}
+        return a;
+    }
+    public static void main(String[] args) {
+    }
+}

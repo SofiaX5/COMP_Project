@@ -1,0 +1,16 @@
+class PropConditionalElse {
+    public int foo(){
+        int a;
+        int b;
+        a = 1;
+        b = 10;
+        if (b < 5) {
+            b = 3;
+        } else {
+            a = 4;
+        }
+        return a;
+    }
+    public static void main(String[] args) {
+    }
+}

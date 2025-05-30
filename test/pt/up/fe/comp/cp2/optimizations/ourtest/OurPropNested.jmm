@@ -1,0 +1,20 @@
+class PropNested {
+    public int foo(){
+        int a;
+        int b;
+        int c;
+        a = 9;
+        b = 5;
+        c = 15;
+        if (b < 10) {
+            if (c < 10) {
+                a = 11;
+            }
+            else{}
+        }
+        else{}
+        return a; // não deve propagar
+    }
+    public static void main(String[] args) {
+    }
+}
