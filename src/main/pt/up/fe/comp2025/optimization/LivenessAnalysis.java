@@ -10,6 +10,11 @@ import java.util.Map;
 public class LivenessAnalysis {
     private ClassUnit classUnit;
 
+    public Map<Instruction, Set<String>> DefSet = new HashMap<>();
+    public Map<Instruction, Set<String>> UseSet = new HashMap<>();
+    public Map<Instruction, Set<String>> InSet = new HashMap<>();
+    public Map<Instruction, Set<String>> OutSet = new HashMap<>();
+
     public LivenessAnalysis(ClassUnit classUnit) {
         this.classUnit = classUnit;
 
@@ -20,14 +25,9 @@ public class LivenessAnalysis {
     }
 
 
-    public List<String> analyzeMethod(Method method) {
+    public void analyzeMethod(Method method) {
         ArrayList<Instruction> instList = method.getInstructions();
         int instSize = instList.size();
-
-        Map<Instruction, Set<String>> DefSet = new HashMap<>();
-        Map<Instruction, Set<String>> UseSet = new HashMap<>();
-        Map<Instruction, Set<String>> InSet = new HashMap<>();
-        Map<Instruction, Set<String>> OutSet = new HashMap<>();
 
         for (Instruction inst : instList) {
             // Def
@@ -82,9 +82,6 @@ public class LivenessAnalysis {
                 }
             }
         } while (livedChanged);
-
-        // Exemplo de retorno: retorna todas as variáveis vivas na 1ª instrução
-        return new ArrayList<>(InSet.get(instList.get(0)));
     }
 
 
