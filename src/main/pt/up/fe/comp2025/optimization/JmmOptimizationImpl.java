@@ -60,8 +60,8 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
     @Override
     public OllirResult optimize(OllirResult ollirResult) {
-        String registerLimitStr = ollirResult.getConfig().getOrDefault("registerAllocation", "-1");
         int registerLimit;
+        String registerLimitStr = ollirResult.getConfig().get("registerAllocation");
 
         try {
             registerLimit = Integer.parseInt(registerLimitStr);
@@ -70,16 +70,11 @@ public class JmmOptimizationImpl implements JmmOptimization {
         }
 
         if (registerLimit >= 0) {
-            ClassUnit classUnit = ollirResult.getOllirClass();
-
-            for (Method method : classUnit.getMethods()) {
-                if (!method.isConstructMethod()) {
-                    RegisterAllocator allocator = new RegisterAllocator(method, registerLimit);
-                    allocator.allocate();
-                }
-            }
-
-            System.out.println("Applied register allocation with limit: " + registerLimit);
+            RegisterAllocator allocator = new RegisterAllocator(ollirResult, registerLimit);
+            allocator.allocate();
+            //System.out.println("Applied register allocation with limit: " + registerLimit);
+        } else {
+            System.out.println("Using default register allocation (OLLIR representation)");
         }
 
         return ollirResult;
