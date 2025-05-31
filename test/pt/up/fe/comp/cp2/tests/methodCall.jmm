@@ -1,0 +1,21 @@
+import A;
+
+class B {
+
+    public static void main(String[] args) {
+    }
+
+    public boolean foo(A a) {
+        int c;
+        boolean d;
+
+        c = this.bar();
+        d = a.bar();
+
+        return d;
+    }
+
+    public int bar() {
+        return 30;
+    }
+}
