@@ -28,8 +28,13 @@ public class OurTest {
 
 
     @Test
-    public void basicClass() {
+    public void methodTest() {
         var result = getOllirResult("methodCall.jmm");
+        System.out.println(result.getOllirCode());
+    }
+    @Test
+    public void methodTest2() {
+        var result = getOllirResult("methodCall2.jmm");
         System.out.println(result.getOllirCode());
     }
 }

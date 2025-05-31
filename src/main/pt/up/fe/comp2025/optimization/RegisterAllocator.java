@@ -2,24 +2,28 @@ package pt.up.fe.comp2025.optimization;
 
 import java.util.*;
 import org.specs.comp.ollir.*;
+import pt.up.fe.comp.jmm.ollir.OllirResult;
 
 public class RegisterAllocator {
-    private Method method;
+    private ClassUnit classUnit;
     private int maxRegisters;
-    private Map<String, Descriptor> varTable;
+
+
+    //private Map<String, Descriptor> varTable; //this.varTable = method.getVarTable();
     private Map<String, Integer> varToRegMap = new HashMap<>();
     private List<String> regularVars = new ArrayList<>();
     private List<String> tempVars = new ArrayList<>();
     private List<String> paramVars = new ArrayList<>();
     private boolean containsThis = false;
 
-    public RegisterAllocator(Method method, int maxRegisters) {
-        this.method = method;
+    public RegisterAllocator(OllirResult ollirResult, int maxRegisters) {
+        this.classUnit = ollirResult.getOllirClass();
         this.maxRegisters = maxRegisters;
-        this.varTable = method.getVarTable();
-        categorizeVariables();
+
+        // Liviness analysis
     }
 
+    /*
     private void categorizeVariables() {
         for (Map.Entry<String, Descriptor> entry : varTable.entrySet()) {
             String varName = entry.getKey();
@@ -43,21 +47,16 @@ public class RegisterAllocator {
         System.out.println("Temp variables: " + tempVars);
         System.out.println("Parameters: " + paramVars);
     }
+     */
 
     public void allocate() {
-        if (maxRegisters < 0) {
-            defaultAllocation();
-        } else if (maxRegisters == 0) {
+        if (maxRegisters == 0) {
             minimizeRegisters();
         } else {
             limitedRegisters();
         }
 
         applyAllocation();
-    }
-
-    private void defaultAllocation() {
-        System.out.println("Using default register allocation (OLLIR representation)");
     }
 
     private void minimizeRegisters() {
@@ -77,12 +76,11 @@ public class RegisterAllocator {
 
         Map<String, VariableLifetime> lifetimes = calculateVariableLifetimes();
         Map<String, Set<String>> interferenceGraph = buildInterferenceGraph(lifetimes);
-
         int minRegisters = constrainedGraphColoring(interferenceGraph);
 
         if (minRegisters > maxRegisters) {
             System.err.println("ERROR: Cannot allocate with only " + maxRegisters +
-                    " registers. Minimum required: " + minRegisters);
+                                    " registers. Minimum required: " + minRegisters);
         }
     }
 

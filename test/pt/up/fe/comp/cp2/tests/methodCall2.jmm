@@ -1,0 +1,36 @@
+import B;
+
+class A{
+
+    public static void main(String[] args) {
+
+    }
+
+    public int foo() {
+        B b;
+        b = new B();
+        b.voidMethod();
+        return 10;
+    }
+
+    public boolean foo2(int a){
+        return a < 10;
+    }
+
+    public int foo3(int i, boolean bl){
+        int res;
+        res = i;
+        if(bl){
+            res = 2 * res;
+        }
+        else{
+        }
+        return res;
+    }
+
+    public int callfoos(){
+        A a;
+        a = new A();
+        return a.foo3(a.foo(), a.foo2(20));
+    }
+}
