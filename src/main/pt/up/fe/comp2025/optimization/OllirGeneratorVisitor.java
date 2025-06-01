@@ -186,17 +186,25 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
         } else {
             JmmNode exprNode = node.getChild(node.getNumChildren()-1);
             Type retType = types.getExprType(exprNode, table);
+            String ollirRetType = ollirTypes.toOllirType(retType);
 
             var expr = exprVisitor.visit(exprNode);
             code.append("   ");
             code.append(expr.getComputation());
-            code.append("ret");
-            code.append(ollirTypes.toOllirType(retType));
-            code.append(SPACE);
 
-            code.append(expr.getCode());
+            if (exprNode.getKind().equals(METHOD_CALL_EXPR.toString())) {
+                String tempRet = ollirTypes.nextTemp() + ollirRetType;
+                code.append(tempRet).append(" :=").append(ollirRetType).append(" ").append(expr.getCode()).append(END_STMT);
+                code.append("ret").append(ollirRetType).append(SPACE).append(tempRet).append(END_STMT);
+            } else {
+                code.append("ret");
+                code.append(ollirRetType);
+                code.append(SPACE);
 
-            code.append(END_STMT);
+                code.append(expr.getCode());
+
+                code.append(END_STMT);
+            }
         }
 
         code.append(R_BRACKET);

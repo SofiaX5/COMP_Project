@@ -133,6 +133,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         StringBuilder computation = new StringBuilder();
 
         JmmNode target = node.getChild(0);
+        JmmNode parent = node.getParent();
         String methodName = node.get("name");
         List<JmmNode> paramNodes = node.getChildren().subList(1, node.getNumChildren());
 
@@ -145,7 +146,6 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
             targetName = target.get("name");
 
             for (String importStr : table.getImports()) {
-                // REVER
                 String simpleImport = importStr.contains(".") ?
                         importStr.substring(importStr.lastIndexOf('.') + 1) : importStr;
                 if (simpleImport.equals(targetName)) {
@@ -155,28 +155,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
             }
         }
 
-        /* QUESTIONÁVEL REVER (E APAGAR O QUE ESTÁ EM BAIXO
-        boolean isVarargsCall = false;
-        if (!isStaticCall && (targetName.equals("this") || table.getClassName().equals(targetName))) {
-            if (table.getMethods().contains(methodName)) {
-                List<Symbol> paramsMethod = table.getParameters(methodName);
-
-                if (!paramNodes.isEmpty()) {
-                    Type lastParam = paramsMethod.get(paramsMethod.size() - 1).getType();
-
-                    if (lastParam.isArray()) { // Como obtenho o jmmnode me vez do type :(
-                    EM PROCESSO
-                    if (numArgs < params.size() && !Objects.equals(params.getFirst().getType(), new Type("vararg", true))) {
-
-                        if (paramNodes.size() >= paramTypes.size()) {
-                            isVarargsCall = true;
-                        }
-                    }
-                }
-            }
-        }
-         */
-
+        // Rever?
         boolean isVarargsCall = false;
         if (!isStaticCall && !targetName.equals("this")) {
         } else if (table.getMethods().contains(methodName)) {
@@ -185,11 +164,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         }
 
 
-
         List<String> paramCodes = new ArrayList<>();
-
-        Type returnType = types.getExprType(node, table);
-        String ollirRetType = ollirTypes.toOllirType(returnType);
 
         if (isVarargsCall) {
             String arrayTempVar = ollirTypes.nextTemp();
@@ -207,20 +182,34 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
             paramCodes.add(arrayTempVar + ".array.i32");
 
         } else {
-            for (JmmNode param : paramNodes) {
+            for (int i = 0; i < paramNodes.size(); i++) {
+                JmmNode param = paramNodes.get(i);
                 OllirExprResult paramResult = visit(param);
                 computation.append(paramResult.getComputation());
 
                 String paramCode = paramResult.getCode();
-                if (paramCode.contains("invoke") || paramCode.contains("[") || paramCode.contains("/")) {
+                if (paramCode.contains("[") || paramCode.contains("/")) {
                     String tempParam = ollirTypes.nextTemp() + ".i32";
                     computation.append(tempParam).append(" :=.i32 ").append(paramCode).append(";\n");
+                    paramCode = tempParam;
+
+                } else if (paramCode.contains("invoke")) {
+                    List<Symbol> params = table.getParameters(methodName);
+                    Type paramType = params.get(i).getType();
+                    String ollirParamType = ollirTypes.toOllirType(paramType);
+
+                    String tempParam = ollirTypes.nextTemp() + ollirParamType;
+                    computation.append(tempParam).append(" :=").append(ollirParamType).append(" ").append(paramCode).append(";\n");
                     paramCode = tempParam;
                 }
 
                 paramCodes.add(paramCode);
             }
         }
+
+
+        Type returnType = types.getExprType(node, table);
+        String ollirRetType = ollirTypes.toOllirType(returnType);
 
         if (isStaticCall) {
             code.append("invokestatic(")
@@ -249,10 +238,26 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
                 code.append(", ").append(paramCode);
             }
 
-            JmmNode smtm = node.getParent();
-            returnType = types.getExprType(smtm.getChildren().getFirst(), table);
-            ollirRetType = ollirTypes.toOllirType(returnType);
 
+            if (parent.getKind().equals(EXPR_STMT.toString())) {
+                returnType = new Type("void", false);
+
+            } else if (parent.getKind().equals(METHOD_CALL_EXPR.toString())) {
+               List<JmmNode> children = parent.getChildren();
+               List<Symbol> params = table.getParameters(parent.get("name"));
+               for (int i = 1; i < children.size(); i++) {
+                   JmmNode child = children.get(i);
+                   if (child == node) {
+                       returnType = params.get(i-1).getType();
+                   }
+               }
+
+            } else {
+                JmmNode stmt = node.getParent();
+                returnType = types.getExprType(stmt.getChildren().getFirst(), table);
+            }
+
+            ollirRetType = ollirTypes.toOllirType(returnType);
             code.append(")").append(ollirRetType);
         }
 
