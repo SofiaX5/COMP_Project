@@ -39,6 +39,24 @@ public class UndeclaredVariable extends AnalysisVisitor {
         addVisit(Kind.CLASS_DECL, this::visitClassDecl);
         addVisit(Kind.NOT_EXPR, this::visitUnaryExpr);
         addVisit(Kind.BINARY_EXPR, this::visitBinaryExpr);
+        addVisit(Kind.METHOD_CALL_EXPR, this::visitMethodCall);
+    }
+
+    private Void visitMethodCall(JmmNode methodCall, SymbolTable table) {
+        if (Objects.equals(currentMethod, "main")) {
+            JmmNode caller = methodCall.getChild(0);
+            if (caller.getKind().equals("ThisExpr")) {
+                var message = "Found 'this' inside static method";
+                addReport(Report.newError(
+                        Stage.SEMANTIC,
+                        methodCall.getLine(),
+                        methodCall.getColumn(),
+                        message,
+                        null
+                ));
+            }
+        }
+        return null;
     }
 
     private Void visitBinaryExpr(JmmNode binaryExpr, SymbolTable table) {
@@ -212,6 +230,24 @@ public class UndeclaredVariable extends AnalysisVisitor {
                 addReport(Report.newError(Stage.SEMANTIC, method.getLine(), method.getColumn(),
                         "Duplicated parameter: " + param.getName(), null));
             }
+            
+            // Add vararg validation
+            if (Objects.equals(param.getType().getName(), "vararg")) {
+                int varargsBeforeLastParam = 0;
+                List<Symbol> params = table.getParameters(currentMethod);
+                int lastIndex = params.size() - 1;
+                
+                for (int i = 0; i < lastIndex; i++) {
+                    if (Objects.equals(params.get(i).getType().getName(), "vararg")) {
+                        varargsBeforeLastParam++;
+                    }
+                }
+                
+                if (varargsBeforeLastParam > 0) {
+                    addReport(Report.newError(Stage.SEMANTIC, method.getLine(), method.getColumn(),
+                            "Found " + varargsBeforeLastParam + " vararg parameter(s) before the last parameter. Vararg parameter must be the last parameter.", null));
+                }
+            }
         }
 
         for (Symbol localVar : table.getLocalVariables(currentMethod)) {
@@ -293,7 +329,7 @@ public class UndeclaredVariable extends AnalysisVisitor {
                 if (params != null && !params.isEmpty()) {
                     int numArgs = babies_expr.size() - 1;
 
-                    if (numArgs < params.size() && !Objects.equals(params.getFirst().getType(), new Type("vararg", true))) {
+                    if (numArgs < params.size() && !Objects.equals(params.getLast().getType(), new Type("vararg", true))) {
                         var message = "Method called with too few arguments: expected " + params.size() +
                                 ", got " + numArgs + ".";
                         addReport(Report.newError(
@@ -303,7 +339,7 @@ public class UndeclaredVariable extends AnalysisVisitor {
                                 message,
                                 null)
                         );
-                    } else if (numArgs > params.size() && !Objects.equals(params.getFirst().getType(), new Type("vararg", true))) {
+                    } else if (numArgs > params.size() && !Objects.equals(params.getLast().getType(), new Type("vararg", true))) {
                         var message = "Method called with too many arguments: expected " + params.size() +
                                 ", got " + numArgs + ".";
                         addReport(Report.newError(
@@ -313,18 +349,30 @@ public class UndeclaredVariable extends AnalysisVisitor {
                                 message,
                                 null)
                         );
-                    } else if (!Objects.equals(params.getFirst().getType(), new Type("vararg", true))) {
+                    } else {
                         for (int i = 0; i < params.size() && i < numArgs; i++) {
-                            if (!Objects.equals(TypeUtils.getExprType(babies_expr.get(i + 1), table), params.get(i).getType())) {
-                                var message = "Parameter type doesn't match: expected " + params.get(i).getType() +
-                                        " for parameter " + (i+1) + ".";
-                                addReport(Report.newError(
-                                        Stage.SEMANTIC,
-                                        expr.getLine(),
-                                        expr.getColumn(),
-                                        message,
-                                        null)
-                                );
+                            JmmNode argExpr = babies_expr.get(i + 1);
+                            Symbol param = params.get(i);
+                            
+                            // Handling for varargs parameter
+                            if (param.getType().getName().equals("vararg")) {
+                                if (argExpr.getKind().equals("ArrayExpr")) {
+                                    continue; 
+                                }
+                            }
+                            
+                            if (!Objects.equals(TypeUtils.getExprType(argExpr, table), param.getType())) {
+                                if (!param.getType().getName().equals("vararg")) { 
+                                    var message = "Parameter type doesn't match: expected " + param.getType() +
+                                            " for parameter " + (i+1) + ".";
+                                    addReport(Report.newError(
+                                            Stage.SEMANTIC,
+                                            expr.getLine(),
+                                            expr.getColumn(),
+                                            message,
+                                            null)
+                                    );
+                                }
                             }
                         }
                     }

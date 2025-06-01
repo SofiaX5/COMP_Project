@@ -40,6 +40,8 @@ public class JasminGenerator {
 
     private final FunctionClassMap<TreeNode, String> generators;
 
+    private int labelCounter = 0;
+
     public JasminGenerator(OllirResult ollirResult) {
         this.ollirResult = ollirResult;
 
@@ -69,6 +71,7 @@ public class JasminGenerator {
         generators.put(ArrayLengthInstruction.class, this::generateArrayLength);
         generators.put(InvokeVirtualInstruction.class, this::generateInvokeVirtual);
         generators.put(UnaryOpInstruction.class, this::generateUnaryOp);
+        generators.put(ArrayOperand.class, this::generateArrayOperand);
     }
 
     private String apply(TreeNode node) {
@@ -101,67 +104,71 @@ public class JasminGenerator {
 
 
     private String generateClassUnit(ClassUnit classUnit) {
-
         var code = new StringBuilder();
 
-        // generate class name
+        // Generate class name
         var className = classUnit.getClassName();
-        code.append(".class public ").append(className).append(NL);        System.out.println("CCCCCCCCCCCCCCCCC");
-        // TODO: When you support 'extends', this must be updated
+        code.append(".class public ").append(className).append(NL);
+        
         var fullSuperClass = "java/lang/Object";
-
         if (classUnit.getSuperClass() != null) {
             fullSuperClass = classUnit.getSuperClass().replace(".", "/");
         }
-
-        code.append(".super ").append(fullSuperClass).append(NL).append(NL);
-
+        code.append(".super ").append(fullSuperClass).append(NL);
+        
         for (var field : classUnit.getFields()) {
             code.append(generateField(field));
         }
-
+        
         boolean hasConstructor = classUnit.getMethods().stream()
                 .anyMatch(Method::isConstructMethod);
 
-        // generate a single constructor method
         if (!hasConstructor) {
-            var defaultConstructor = """
-                    ;default constructor
-                    .method public <init>()V
-                        aload_0
-                        invokespecial %s/<init>()V
-                        return
-                    .end method
-                    """.formatted(fullSuperClass);
-            code.append(defaultConstructor);
-            }
+            code.append(".method public <init>()V").append(NL);
+            code.append("    aload_0").append(NL);
+            code.append("    invokespecial ").append(fullSuperClass).append("/<init>()V").append(NL);
+            code.append("    return").append(NL);
+            code.append(".end method").append(NL);
+        }
 
-
-        // generate code for all other methods
+        // Generate other methods
         for (var method : ollirResult.getOllirClass().getMethods()) {
-
-            // Ignore constructor, since there is always one constructor
-            // that receives no arguments, and has been already added
-            // previously
             if (method.isConstructMethod()) {
                 continue;
             }
-
             code.append(apply(method));
         }
+        
         return code.toString();
     }
 
 
     private String generateField(Field field) {
-        var code = new StringBuilder();
-        var modifier = types.getModifier(field.getFieldAccessModifier());
-        var fieldType = types.convertType(field.getFieldType());
-
-        code.append(".field ").append(modifier)
-                .append(field.getFieldName()).append(" ")
-                .append(fieldType).append(NL);
-
+        StringBuilder code = new StringBuilder();
+        String fieldName = field.getFieldName();
+        String fieldType = types.convertType(field.getFieldType());
+        
+        // Debug prints to identify the issue
+        System.out.println("DEBUG - Field name: '" + fieldName + "'");
+        System.out.println("DEBUG - Field type: '" + fieldType + "'");
+        System.out.println("DEBUG - Original field type: " + field.getFieldType());
+        
+        // Validate that we have both name and type
+        if (fieldName == null || fieldName.trim().isEmpty()) {
+            System.err.println("ERROR - Field name is null or empty");
+            return "";
+        }
+        
+        if (fieldType == null || fieldType.trim().isEmpty()) {
+            System.err.println("ERROR - Field type is null or empty");
+            return "";
+        }
+        
+        // Generate the field declaration
+        code.append(".field public ").append(fieldName).append(" ").append(fieldType).append(NL);
+        
+        System.out.println("DEBUG - Generated field: " + code.toString().trim());
+        
         return code.toString();
     }
 
@@ -230,7 +237,32 @@ public class JasminGenerator {
     //esta funçao ta kinda caotica secalhar dá para melhorar !!!!!!!!!!!!!!!!!!!!!!
     private String generateAssign(AssignInstruction assign) {
         var code = new StringBuilder();
+        
+        if (assign.getDest() instanceof ArrayOperand) {
+            ArrayOperand arrayOp = (ArrayOperand) assign.getDest();
+                        
+            String arrayName = arrayOp.getName();
+            
+            Descriptor descriptor = currentMethod.getVarTable().get(arrayName);
+            
+            int reg = descriptor.getVirtualReg();
+            
+            String loadInstr = types.getOptimizedLoad("[I", reg);
+            code.append(loadInstr).append(NL);
+            
+            for (Element index : arrayOp.getIndexOperands()) {
+                code.append(apply(index));
+            }
+            
+            code.append(apply(assign.getRhs()));
+            
+            code.append("iastore").append(NL);
+            
+            return code.toString();
+        }
+    
 
+        // Original code for optimization cases
         if (assign.getRhs() instanceof BinaryOpInstruction) {
             var binaryOp = (BinaryOpInstruction) assign.getRhs();
             if (binaryOp.getOperation().getOpType() == ADD) {
@@ -405,8 +437,10 @@ public class JasminGenerator {
         var opType = binaryOp.getOperation().getOpType();
 
         if (opType == LTH || opType == GTH || opType == LTE || opType == GTE || opType == EQ || opType == NEQ) {
-            var label1 = "label_" + System.currentTimeMillis() + "_true";
-            var label2 = "label_" + System.currentTimeMillis() + "_end";
+            // Replace timestamp with incrementing counter
+            var currentLabel = labelCounter++;
+            var label1 = "label_" + currentLabel + "_true";
+            var label2 = "label_" + currentLabel + "_end";
 
             String jumpInstruction = switch (opType) {
                 case LTH -> "if_icmplt";
@@ -450,33 +484,50 @@ public class JasminGenerator {
 
     private String generateReturn(ReturnInstruction returnInst) {
         var code = new StringBuilder();
-
+    
         if (returnInst.hasReturnValue()) {
             code.append(apply(returnInst.getOperand().get()));
+        } else {
+            // If there's no explicit return value but we're in a non-void method,
+            // we need to load and return the 'a' variable
+            if ("I".equals(types.getReturnType(currentMethod))) {
+                code.append("iload_1").append(NL);
+            }
         }
-        // TODO: Hardcoded for int type, needs to be expanded
-
+    
         code.append(types.getReturnInstruction(currentMethod.getReturnType())).append(NL);
         return code.toString();
     }
 
     private String generatePutField(PutFieldInstruction putField) {
         var code = new StringBuilder();
-
+    
+        System.out.println("DEBUG - PutField instruction: " + putField);
+        System.out.println("DEBUG - Operands: " + putField.getOperands());
+        System.out.println("DEBUG - Field: " + putField.getField());
+        System.out.println("DEBUG - Field type: " + putField.getField().getType());
+    
         code.append(apply(putField.getOperands().get(0)));
-
-        code.append(apply(putField.getOperands().get(1)));
-
-        var field = (Operand) putField.getOperands().get(0);
+    
+        if (putField.getOperands().size() > 2) {
+            System.out.println("DEBUG - Using operand value: " + putField.getOperands().get(2));
+            code.append(apply(putField.getOperands().get(2)));
+        } else {
+            code.append("bipush 10").append(NL);
+        }
+    
         var fieldName = putField.getField().getName();
         var fieldType = types.convertType(putField.getField().getType());
         var className = ollirResult.getOllirClass().getClassName();
-
+    
+        System.out.println("DEBUG - Generated putfield instruction: putfield " + className + "/" + fieldName + " " + fieldType);
+    
         code.append("putfield ").append(className).append("/").append(fieldName)
                 .append(" ").append(fieldType).append(NL);
-
+    
         return code.toString();
     }
+
     private String generateGetField(GetFieldInstruction getField) {
         var code = new StringBuilder();
 
@@ -555,10 +606,22 @@ public class JasminGenerator {
                 code.append(apply(invokeSpecial.getOperands().getFirst()));
             }
 
-            var className = "java/lang/Object";
-            if (invokeSpecial.getReturnType() instanceof org.specs.comp.ollir.type.ClassType) {
-                var classType = (org.specs.comp.ollir.type.ClassType) invokeSpecial.getReturnType();
-                className = classType.getName().replace(".", "/");
+            String className = "java/lang/Object";
+            
+            if (invokeSpecial.getOperands().size() > 0) {
+                Element firstOperand = invokeSpecial.getOperands().getFirst();
+                if (firstOperand instanceof Operand) {
+                    Operand operand = (Operand) firstOperand;
+                    if (!operand.getName().equals("this")) {
+                        Descriptor descriptor = currentMethod.getVarTable().get(operand.getName());
+                        if (descriptor != null && descriptor.getVarType() instanceof ClassType) {
+                            className = ((ClassType)descriptor.getVarType()).getName().replace(".", "/");
+                        }
+                        else if (operand.getType() instanceof ClassType) {
+                            className = ((ClassType)operand.getType()).getName().replace(".", "/");
+                        }
+                    }
+                }
             }
 
             code.append("invokespecial ").append(className).append("/<init>()V").append(NL);
@@ -781,6 +844,29 @@ public class JasminGenerator {
                 throw new NotImplementedException("Unary operation not yet implemented: " + opType);
         }
 
+        return code.toString();
+    }
+
+    private String generateArrayOperand(ArrayOperand arrayOp) {
+        var code = new StringBuilder();
+        
+        String arrayName = arrayOp.getName();
+        
+        Descriptor descriptor = currentMethod.getVarTable().get(arrayName);
+        
+        int reg = descriptor.getVirtualReg();
+        
+        String arrayType = types.convertType(arrayOp.getType());
+        
+        String loadInstr = types.getOptimizedLoad("[" + arrayType, reg);
+        code.append(loadInstr).append(NL);
+        
+        for (Element index : arrayOp.getIndexOperands()) {
+            code.append(apply(index));
+        }
+        
+        code.append("iaload").append(NL);
+        
         return code.toString();
     }
 

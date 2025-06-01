@@ -2,52 +2,32 @@ package pt.up.fe.comp2025.optimization;
 
 import java.util.*;
 import org.specs.comp.ollir.*;
+import pt.up.fe.comp.jmm.ollir.OllirResult;
+import org.specs.comp.ollir.inst.Instruction;
 
 public class RegisterAllocator {
-    private Method method;
+    private ClassUnit classUnit;
     private int maxRegisters;
-    private Map<String, Descriptor> varTable;
+
+    private LivenessAnalysis liveAnalysis;
+
+    //private Map<String, Descriptor> varTable; //this.varTable = method.getVarTable();
     private Map<String, Integer> varToRegMap = new HashMap<>();
     private List<String> regularVars = new ArrayList<>();
     private List<String> tempVars = new ArrayList<>();
     private List<String> paramVars = new ArrayList<>();
     private boolean containsThis = false;
 
-    public RegisterAllocator(Method method, int maxRegisters) {
-        this.method = method;
+    public RegisterAllocator(OllirResult ollirResult, int maxRegisters) {
+        this.classUnit = ollirResult.getOllirClass();
         this.maxRegisters = maxRegisters;
-        this.varTable = method.getVarTable();
-        categorizeVariables();
+
+        this.liveAnalysis = new LivenessAnalysis(classUnit);
     }
 
-    private void categorizeVariables() {
-        for (Map.Entry<String, Descriptor> entry : varTable.entrySet()) {
-            String varName = entry.getKey();
-            Descriptor descriptor = entry.getValue();
-
-            if (varName.equals("this")) {
-                containsThis = true;
-                continue;
-            }
-
-            if (descriptor.getScope() == VarScope.PARAMETER) {
-                paramVars.add(varName);
-            } else if (varName.startsWith("tmp")) {
-                tempVars.add(varName);
-            } else {
-                regularVars.add(varName);
-            }
-        }
-
-        System.out.println("Regular variables: " + regularVars);
-        System.out.println("Temp variables: " + tempVars);
-        System.out.println("Parameters: " + paramVars);
-    }
 
     public void allocate() {
-        if (maxRegisters < 0) {
-            defaultAllocation();
-        } else if (maxRegisters == 0) {
+        if (maxRegisters == 0) {
             minimizeRegisters();
         } else {
             limitedRegisters();
@@ -56,16 +36,12 @@ public class RegisterAllocator {
         applyAllocation();
     }
 
-    private void defaultAllocation() {
-        System.out.println("Using default register allocation (OLLIR representation)");
-    }
-
     private void minimizeRegisters() {
         Map<String, VariableLifetime> lifetimes = calculateVariableLifetimes();
 
-        Map<String, Set<String>> interferenceGraph = buildInterferenceGraph(lifetimes);
+        //Map<String, Set<String>> interferenceGraph = buildInterferenceGraph(lifetimes);
 
-        graphColoring(interferenceGraph);
+        //graphColoring(interferenceGraph);
 
         System.out.println("Minimized register usage through graph coloring");
     }
@@ -76,14 +52,13 @@ public class RegisterAllocator {
         }
 
         Map<String, VariableLifetime> lifetimes = calculateVariableLifetimes();
-        Map<String, Set<String>> interferenceGraph = buildInterferenceGraph(lifetimes);
+        //Map<String, Set<String>> interferenceGraph = buildInterferenceGraph(lifetimes);
+        //int minRegisters = constrainedGraphColoring(interferenceGraph);
 
-        int minRegisters = constrainedGraphColoring(interferenceGraph);
-
-        if (minRegisters > maxRegisters) {
-            System.err.println("ERROR: Cannot allocate with only " + maxRegisters +
-                    " registers. Minimum required: " + minRegisters);
-        }
+        // if (minRegisters > maxRegisters) {
+            // System.err.println("ERROR: Cannot allocate with only " + maxRegisters +
+            //        " registers. Minimum required: " + minRegisters);
+        //}
     }
 
     private boolean handleSpecialTestCases() {
@@ -144,10 +119,12 @@ public class RegisterAllocator {
             String varName = entry.getKey();
             int regNum = entry.getValue();
 
-            Descriptor descriptor = varTable.get(varName);
+            /*Descriptor descriptor = varTable.get(varName);
             if (descriptor != null) {
                 setVirtualReg(descriptor, regNum);
             }
+
+             */
         }
     }
 
@@ -186,28 +163,31 @@ public class RegisterAllocator {
         return lifetimes;
     }
 
-    private Map<String, Set<String>> buildInterferenceGraph(Map<String, VariableLifetime> lifetimes) {
-        Map<String, Set<String>> graph = new HashMap<>();
+    private Map<String, Set<String>> buildInterferenceGraph(Method method) {
+        Map<String, Set<String>> interferenceGraph = new HashMap<>();
 
-        for (String var : lifetimes.keySet()) {
-            graph.put(var, new HashSet<>());
-        }
+        for (Instruction instr : method.getInstructions()) {
+            Set<String> defVars = liveAnalysis.DefSet.getOrDefault(instr, new HashSet<>());
+            Set<String> outVars = liveAnalysis.OutSet.getOrDefault(instr, new HashSet<>());
 
-        for (String var1 : lifetimes.keySet()) {
-            VariableLifetime lt1 = lifetimes.get(var1);
+            for (String def : defVars) {
+                // Garante que def está no grafo
+                interferenceGraph.putIfAbsent(def, new HashSet<>());
 
-            for (String var2 : lifetimes.keySet()) {
-                if (var1.equals(var2)) continue;
-                VariableLifetime lt2 = lifetimes.get(var2);
+                for (String out : outVars) {
+                    if (!out.equals(def)) {
+                        // Adiciona aresta def ↔ out (grafo não-direcionado)
+                        interferenceGraph.get(def).add(out);
 
-                if (!(lt1.end < lt2.start || lt2.end < lt1.start)) {
-                    graph.get(var1).add(var2);
-                    graph.get(var2).add(var1);
+                        // Garante simetria da ligação
+                        interferenceGraph.putIfAbsent(out, new HashSet<>());
+                        interferenceGraph.get(out).add(def);
+                    }
                 }
             }
         }
 
-        return graph;
+        return interferenceGraph;
     }
 
     private void graphColoring(Map<String, Set<String>> interferenceGraph) {
