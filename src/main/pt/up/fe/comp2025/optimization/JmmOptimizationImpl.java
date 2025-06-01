@@ -36,22 +36,20 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
         var constProp = new ConstPropVisitor();
         var constFold = new ConstFoldVisitor();
-        var deadCodeElim = new DeadCodeElimination(semanticsResult.getSymbolTable());
 
-        boolean changedProp, changedFold, changedDCE;
+        boolean changedProp, changedFold;
         int iterations = 0;
         final int MAX_ITERATIONS = 10;
 
         do {
             changedProp = constProp.visit(semanticsResult.getRootNode());
-            changedFold = constFold.visit(semanticsResult.getRootNode(), new HashMap<>()); // <--- FIX: Use new HashMap<>()
-            changedDCE = deadCodeElim.visit(semanticsResult.getRootNode(), new HashMap<>()); // <--- FIX: Use new HashMap<>()
+            changedFold = constFold.visit(semanticsResult.getRootNode(), new HashMap<>());
             iterations++;
 
-            if (changedProp || changedFold || changedDCE) { // Also include changedDCE in print condition
+            if (changedProp || changedFold ) {
                 System.out.println("AST changed during optimization iteration " + iterations);
             }
-        } while ((changedProp || changedFold || changedDCE) && iterations < MAX_ITERATIONS);
+        } while ((changedProp || changedFold) && iterations < MAX_ITERATIONS);
 
         if (iterations >= MAX_ITERATIONS) {
             System.out.println("Warning: Optimization stopped after " + MAX_ITERATIONS + " iterations.");
@@ -62,6 +60,25 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
     @Override
     public OllirResult optimize(OllirResult ollirResult) {
+        if (ollirResult.getConfig().getOrDefault("optimize", "false").equals("true")) {
+            try {
+                ClassUnit classUnit = ollirResult.getOllirClass();
+
+                DeadCodeElimination deadCodeEliminator = new DeadCodeElimination(classUnit);
+                boolean dceChanged = deadCodeEliminator.optimizeIteratively();
+
+                if (dceChanged) {
+                    System.out.println("Dead code elimination made changes to OLLIR");
+                } else {
+                    System.out.println("No dead code found to eliminate");
+                }
+
+            } catch (Exception e) {
+                System.err.println("Error during dead code elimination: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
         int registerLimit;
         String registerLimitStr = ollirResult.getConfig().get("registerAllocation");
 
