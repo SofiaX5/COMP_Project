@@ -75,7 +75,9 @@ public class StackSimulator {
             simulateArrayLengthInstruction((ArrayLengthInstruction) instruction);
         } else if (instruction instanceof InvokeVirtualInstruction) {
             simulateInvokeVirtualInstruction((InvokeVirtualInstruction) instruction);
-        }
+        } else if (instruction instanceof BinaryOpInstruction) {
+            simulateBinaryOpInstruction((BinaryOpInstruction) instruction);
+        } 
 
     }
 
@@ -196,4 +198,7 @@ public class StackSimulator {
             pushStack(1);
         }
     }
+
+
+    
 }

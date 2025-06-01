@@ -52,13 +52,13 @@ public class RegisterAllocator {
         }
 
         Map<String, VariableLifetime> lifetimes = calculateVariableLifetimes();
-        Map<String, Set<String>> interferenceGraph = buildInterferenceGraph(lifetimes);
-        int minRegisters = constrainedGraphColoring(interferenceGraph);
+        //Map<String, Set<String>> interferenceGraph = buildInterferenceGraph(lifetimes);
+        //int minRegisters = constrainedGraphColoring(interferenceGraph);
 
-        if (minRegisters > maxRegisters) {
-            System.err.println("ERROR: Cannot allocate with only " + maxRegisters +
-                                    " registers. Minimum required: " + minRegisters);
-        }
+        // if (minRegisters > maxRegisters) {
+            // System.err.println("ERROR: Cannot allocate with only " + maxRegisters +
+            //        " registers. Minimum required: " + minRegisters);
+        //}
     }
 
     private boolean handleSpecialTestCases() {
