@@ -34,6 +34,7 @@ public class RegisterAllocator {
 
             updateVarTable(method, graphColor, varTable);
         }
+
     }
 
 

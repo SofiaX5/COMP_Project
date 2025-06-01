@@ -179,7 +179,6 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
         boolean isVarargsCall = false;
         if (!isStaticCall && !targetName.equals("this")) {
-
         } else if (table.getMethods().contains(methodName)) {
             isVarargsCall = table.getParameters(methodName).size() > 0 &&
                     paramNodes.size() > table.getParameters(methodName).size();
