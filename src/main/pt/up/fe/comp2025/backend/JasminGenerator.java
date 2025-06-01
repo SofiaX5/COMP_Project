@@ -690,15 +690,19 @@ public class JasminGenerator {
 
         String className;
         if (invokeStatic.getCaller() instanceof LiteralElement) {
-            className = ((LiteralElement) invokeStatic.getCaller()).getLiteral().replace("\"", "");
+            String baseClassName = ((LiteralElement) invokeStatic.getCaller()).getLiteral().replace("\"", "");
+            className = resolveFullClassName(baseClassName);
         } else if (invokeStatic.getCaller() instanceof Operand) {
-            className = ((Operand) invokeStatic.getCaller()).getName();
-            if (className.contains(".")) {
-                className = className.substring(0, className.lastIndexOf("."));
+            String baseClassName = ((Operand) invokeStatic.getCaller()).getName();
+            if (baseClassName.contains(".")) {
+                baseClassName = baseClassName.substring(0, baseClassName.lastIndexOf("."));
             }
-        }
-        else {
-            className = invokeStatic.getCaller().toString().replace(".", "/");
+            className = resolveFullClassName(baseClassName);
+        } else {
+            className = invokeStatic.getCaller().toString();
+            if (!className.contains("/")) {
+                className = resolveFullClassName(className);
+            }
         }
 
         var methodName = ((LiteralElement) invokeStatic.getMethodName()).getLiteral().replace("\"", "");
@@ -870,4 +874,15 @@ public class JasminGenerator {
         return code.toString();
     }
 
+    private String resolveFullClassName(String baseClassName) {
+        ClassUnit classUnit = ollirResult.getOllirClass();
+        
+        for (String importStr : classUnit.getImports()) {
+            if (importStr.endsWith("." + baseClassName) || importStr.equals(baseClassName)) {
+                return importStr.replace(".", "/");
+            }
+        }
+        
+        return baseClassName;
+    }
 }
