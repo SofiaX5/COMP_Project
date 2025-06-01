@@ -36,7 +36,6 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
         var constProp = new ConstPropVisitor();
         var constFold = new ConstFoldVisitor();
-        var astDce = new AstDeadCodeElimination();
 
         boolean changedProp, changedFold, changedDce;
         int iterations = 0;
