@@ -120,7 +120,7 @@ public class JasminGenerator {
         
         boolean hasConstructor = classUnit.getMethods().stream()
                 .anyMatch(Method::isConstructMethod);
-    
+
         if (!hasConstructor) {
             code.append(".method public <init>()V").append(NL);
             code.append("    aload_0").append(NL);
@@ -128,7 +128,7 @@ public class JasminGenerator {
             code.append("    return").append(NL);
             code.append(".end method").append(NL);
         }
-    
+
         // Generate other methods
         for (var method : ollirResult.getOllirClass().getMethods()) {
             if (method.isConstructMethod()) {
@@ -523,6 +523,7 @@ public class JasminGenerator {
     
         return code.toString();
     }
+
     private String generateGetField(GetFieldInstruction getField) {
         var code = new StringBuilder();
 
