@@ -90,8 +90,8 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
         if (registerLimit >= 0) {
             RegisterAllocator allocator = new RegisterAllocator(ollirResult, registerLimit);
-            allocator.allocate();
-            //System.out.println("Applied register allocation with limit: " + registerLimit);
+            allocator.allocateForAllMethods();
+            System.out.println("Applied register allocation with limit: " + registerLimit);
         } else {
             System.out.println("Using default register allocation (OLLIR representation)");
         }

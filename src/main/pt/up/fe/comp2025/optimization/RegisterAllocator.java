@@ -9,122 +9,113 @@ public class RegisterAllocator {
     private ClassUnit classUnit;
     private int maxRegisters;
 
-    private LivenessAnalysis liveAnalysis;
+    private Map<String, Map<String, Integer>> allocationPerMethod = new HashMap<>();
 
-    //private Map<String, Descriptor> varTable; //this.varTable = method.getVarTable();
-    private Map<String, Integer> varToRegMap = new HashMap<>();
-    private List<String> regularVars = new ArrayList<>();
-    private List<String> tempVars = new ArrayList<>();
-    private List<String> paramVars = new ArrayList<>();
-    private boolean containsThis = false;
 
     public RegisterAllocator(OllirResult ollirResult, int maxRegisters) {
         this.classUnit = ollirResult.getOllirClass();
         this.maxRegisters = maxRegisters;
-
-        this.liveAnalysis = new LivenessAnalysis(classUnit);
     }
 
+    public void allocateForAllMethods() {
+        classUnit.buildCFGs();
 
-    public void allocate() {
-        if (maxRegisters == 0) {
-            minimizeRegisters();
-        } else {
-            limitedRegisters();
+        for (Method method : classUnit.getMethods()) {
+            LivenessAnalysis liveAnalysis = new LivenessAnalysis(method);
+
+            Map<String, Set<String>> interferenceGraph = buildInterferenceGraph(method, liveAnalysis);
+            System.out.println("Interference graph: " + interferenceGraph);
+
+            Map<String, Descriptor> varTable = method.getVarTable();
+            int numColorInit = getNumRegInit(method, varTable);
+            Map<String, Integer> graphColor = colorGraph(interferenceGraph, numColorInit);
+
+            allocationPerMethod.put(method.getMethodName(), graphColor);
+
+            updateVarTable(method, graphColor, varTable);
         }
 
-        applyAllocation();
     }
 
-    private void minimizeRegisters() {
-        Map<String, VariableLifetime> lifetimes = calculateVariableLifetimes();
 
-        //Map<String, Set<String>> interferenceGraph = buildInterferenceGraph(lifetimes);
+    private Map<String, Set<String>> buildInterferenceGraph(Method method, LivenessAnalysis liveAnalysis) {
+        Map<String, Set<String>> interferenceGraph = new HashMap<>();
 
-        //graphColoring(interferenceGraph);
+        for (Instruction instr : method.getInstructions()) {
+            Set<String> defInst = liveAnalysis.DefSet.getOrDefault(instr, new HashSet<>());
+            Set<String> outInst = liveAnalysis.OutSet.getOrDefault(instr, new HashSet<>());
+            System.out.println("DefSet: " + defInst + ", OutSet: " + outInst);
 
-        System.out.println("Minimized register usage through graph coloring");
-    }
+            for (String def : defInst) {
+                // Add def to graph
+                interferenceGraph.putIfAbsent(def, new HashSet<>());
 
-    private void limitedRegisters() {
-        if (handleSpecialTestCases()) {
-            return;
+                for (String out : outInst) {
+                    // Add out if def != out
+                    if (!out.equals(def)) {
+                        interferenceGraph.get(def).add(out);
+
+                        // Symetric
+                        interferenceGraph.putIfAbsent(out, new HashSet<>());
+                        interferenceGraph.get(out).add(def);
+                    }
+                }
+            }
         }
 
-        Map<String, VariableLifetime> lifetimes = calculateVariableLifetimes();
-        //Map<String, Set<String>> interferenceGraph = buildInterferenceGraph(lifetimes);
-        //int minRegisters = constrainedGraphColoring(interferenceGraph);
-
-        // if (minRegisters > maxRegisters) {
-            // System.err.println("ERROR: Cannot allocate with only " + maxRegisters +
-            //        " registers. Minimum required: " + minRegisters);
-        //}
+        return interferenceGraph;
     }
 
-    private boolean handleSpecialTestCases() {
-        if (maxRegisters == 1 && regularVars.size() >= 4 &&
-                regularVars.contains("a") && regularVars.contains("b") &&
-                regularVars.contains("c") && regularVars.contains("d")) {
+    public Map<String, Integer> colorGraph(Map<String, Set<String>> interferenceGraph, int numColorsInit) {
+        Map<String, Integer> colorAssignment = new HashMap<>();
 
-            for (String varName : regularVars) {
-                varToRegMap.put(varName, 0);
-                System.out.println("Assigned register 0 to regular variable: " + varName);
+        // Lista de variáveis (nós) a colorir
+        List<String> variables = new ArrayList<>(interferenceGraph.keySet());
+
+        variables.sort((v1, v2) ->
+                Integer.compare(interferenceGraph.get(v2).size(), interferenceGraph.get(v1).size()));
+
+        for (String variable : variables) {
+            Set<Integer> usedColors = new HashSet<>();
+
+            // Verifica as cores dos vizinhos
+            for (String neighbor : interferenceGraph.getOrDefault(variable, Set.of())) {
+                if (colorAssignment.containsKey(neighbor)) {
+                    usedColors.add(colorAssignment.get(neighbor));
+                }
             }
 
-            for (String varName : paramVars) {
-                varToRegMap.put(varName, 1);
-                System.out.println("Assigned register 1 to parameter: " + varName);
+
+            int color = numColorsInit;
+            while (usedColors.contains(color)) {
+                color++;
             }
 
-            if (containsThis) {
-                varToRegMap.put("this", 2);
-                System.out.println("Assigned register 2 to 'this' to ensure 3 total registers");
+            if (color >= maxRegisters) {
+                System.err.println("ERROR: Cannot allocate with only " + maxRegisters +
+                        " registers. Minimum required: " + maxRegisters);
+
             }
 
-            return true;
+
+            colorAssignment.put(variable, color);
         }
 
-        if (maxRegisters == 2 && regularVars.size() == 2 &&
-                regularVars.contains("a") && regularVars.contains("b") && tempVars.size() == 1) {
-
-            varToRegMap.put("a", 0);
-            varToRegMap.put("b", 1);
-            System.out.println("Assigned register 0 to regular variable: a");
-            System.out.println("Assigned register 1 to regular variable: b");
-
-            String tempVar = tempVars.get(0);
-            varToRegMap.put(tempVar, 2);
-            System.out.println("Assigned register 2 to temp variable: " + tempVar);
-
-            // Parameters use register 3
-            for (String varName : paramVars) {
-                varToRegMap.put(varName, 3);
-                System.out.println("Assigned register 3 to parameter: " + varName);
-            }
-
-            if (containsThis) {
-                varToRegMap.put("this", 3);
-                System.out.println("Assigned register 3 to 'this'");
-            }
-
-            return true;
-        }
-
-        return false;
+        return colorAssignment;
     }
 
-    // Apply the calculated register allocations to the variables
-    private void applyAllocation() {
-        for (Map.Entry<String, Integer> entry : varToRegMap.entrySet()) {
+    public void updateVarTable(Method method, Map<String, Integer> registerAllocation, Map<String, Descriptor> varTable) {
+        for (Map.Entry<String, Integer> entry : registerAllocation.entrySet()) {
             String varName = entry.getKey();
-            int regNum = entry.getValue();
+            int reg = entry.getValue();
 
-            /*Descriptor descriptor = varTable.get(varName);
-            if (descriptor != null) {
-                setVirtualReg(descriptor, regNum);
+            Descriptor desc = varTable.get(varName);
+            if (desc != null) {
+                setVirtualReg(desc, reg);
+                System.out.println("Variável atualizada: " + varName);
+            } else {
+                System.out.println("Variável não encontrada no varTable: " + varName);
             }
-
-             */
         }
     }
 
@@ -137,122 +128,13 @@ public class RegisterAllocator {
         }
     }
 
-    private Map<String, VariableLifetime> calculateVariableLifetimes() {
-        Map<String, VariableLifetime> lifetimes = new HashMap<>();
-
-        for (String var : regularVars) {
-            lifetimes.put(var, new VariableLifetime());
+    private int getNumRegInit(Method method, Map<String, Descriptor> varTable) {
+        int num = 0;
+        for (Descriptor descriptor : varTable.values()) {
+            VarScope scope = descriptor.getScope();
+            if (scope == VarScope.FIELD || scope == VarScope.PARAMETER) num++;
         }
-        for (String var : tempVars) {
-            lifetimes.put(var, new VariableLifetime());
-        }
-        for (String var : paramVars) {
-            lifetimes.put(var, new VariableLifetime());
-        }
-
-        int instructionIndex = 0;
-        for (String var : regularVars) {
-            lifetimes.get(var).start = instructionIndex++;
-            lifetimes.get(var).end = instructionIndex + 2;
-        }
-        for (String var : tempVars) {
-            lifetimes.get(var).start = instructionIndex++;
-            lifetimes.get(var).end = instructionIndex + 1;
-        }
-
-        return lifetimes;
-    }
-
-    private Map<String, Set<String>> buildInterferenceGraph(Method method) {
-        Map<String, Set<String>> interferenceGraph = new HashMap<>();
-
-        for (Instruction instr : method.getInstructions()) {
-            Set<String> defVars = liveAnalysis.DefSet.getOrDefault(instr, new HashSet<>());
-            Set<String> outVars = liveAnalysis.OutSet.getOrDefault(instr, new HashSet<>());
-
-            for (String def : defVars) {
-                // Garante que def está no grafo
-                interferenceGraph.putIfAbsent(def, new HashSet<>());
-
-                for (String out : outVars) {
-                    if (!out.equals(def)) {
-                        // Adiciona aresta def ↔ out (grafo não-direcionado)
-                        interferenceGraph.get(def).add(out);
-
-                        // Garante simetria da ligação
-                        interferenceGraph.putIfAbsent(out, new HashSet<>());
-                        interferenceGraph.get(out).add(def);
-                    }
-                }
-            }
-        }
-
-        return interferenceGraph;
-    }
-
-    private void graphColoring(Map<String, Set<String>> interferenceGraph) {
-        List<String> sortedVars = new ArrayList<>(interferenceGraph.keySet());
-
-        sortedVars.sort((v1, v2) ->
-                Integer.compare(interferenceGraph.get(v2).size(), interferenceGraph.get(v1).size()));
-
-        for (String var : sortedVars) {
-            Set<Integer> usedColors = new HashSet<>();
-
-            for (String neighbor : interferenceGraph.get(var)) {
-                if (varToRegMap.containsKey(neighbor)) {
-                    usedColors.add(varToRegMap.get(neighbor));
-                }
-            }
-
-            int color = 0;
-            while (usedColors.contains(color)) {
-                color++;
-            }
-
-            varToRegMap.put(var, color);
-            System.out.println("Assigned register " + color + " to variable: " + var);
-        }
-    }
-
-    private int constrainedGraphColoring(Map<String, Set<String>> interferenceGraph) {
-        List<String> sortedVars = new ArrayList<>(interferenceGraph.keySet());
-
-        sortedVars.sort((v1, v2) ->
-                Integer.compare(interferenceGraph.get(v2).size(), interferenceGraph.get(v1).size()));
-
-        int maxColorUsed = -1;
-
-        for (String var : sortedVars) {
-            Set<Integer> usedColors = new HashSet<>();
-
-            for (String neighbor : interferenceGraph.get(var)) {
-                if (varToRegMap.containsKey(neighbor)) {
-                    usedColors.add(varToRegMap.get(neighbor));
-                }
-            }
-
-            int color = 0;
-            while (usedColors.contains(color) && color < maxRegisters) {
-                color++;
-            }
-
-            if (color >= maxRegisters) {
-                System.out.println("WARNING: Not enough registers to allocate variable: " + var);
-                color = maxRegisters - 1;
-            }
-
-            varToRegMap.put(var, color);
-            System.out.println("Assigned register " + color + " to variable: " + var);
-
-            maxColorUsed = Math.max(maxColorUsed, color);
-        }
-
-        return maxColorUsed + 1;
-    }
-
-    private static class VariableLifetime {
-        int start = Integer.MAX_VALUE; // First use
-        int end = -1;                  // Last use
+        if (!method.isStaticMethod()) num++;
+        return num;
     }
 }
