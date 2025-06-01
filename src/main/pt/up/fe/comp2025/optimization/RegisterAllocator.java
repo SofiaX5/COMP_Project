@@ -91,7 +91,7 @@ public class RegisterAllocator {
                 color++;
             }
 
-            if (color >= maxRegisters) {
+            if (maxRegisters != 0 && color >= maxRegisters) {
                 System.err.println("ERROR: Cannot allocate with only " + maxRegisters +
                         " registers. Minimum required: " + maxRegisters);
 

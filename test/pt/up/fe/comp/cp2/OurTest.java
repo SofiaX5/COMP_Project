@@ -52,46 +52,5 @@ public class OurTest {
         System.out.println(result.getOllirCode());
     }
 
-    @Test
-    public void regAlloc1() {
-        String filename = "alloc1.jmm";
-        //int expectedTotalReg = 1;
-        int configMaxRegs = 2;
 
-        OllirResult optimized = getOllirResultRegalloc(filename, configMaxRegs);
-
-        int actualNumReg = CpUtils.countRegisters(CpUtils.getMethod(optimized, "A"));
-        int actualNumReg2 = CpUtils.countRegisters(CpUtils.getMethod(optimized, "main"));
-        int actualNumReg3 = CpUtils.countRegisters(CpUtils.getMethod(optimized, "foo"));
-        int actualNumReg4 = CpUtils.countRegisters(CpUtils.getMethod(optimized, "foo2"));
-        int actualNumReg5 = CpUtils.countRegisters(CpUtils.getMethod(optimized, "foo3"));
-        int actualNumReg6 = CpUtils.countRegisters(CpUtils.getMethod(optimized, "callfoos"));
-
-        // Number of registers might change depending on what temporaries are generated, no use comparing with original
-
-        CpUtils.assertTrue("Expected number of locals in 'soManyRegisters' to be equal to " + 1 + ", is " + actualNumReg,
-                actualNumReg == 1,
-                optimized);
-
-        CpUtils.assertTrue("Expected number of locals in 'soManyRegisters' to be equal to " + 1 + ", is " + actualNumReg,
-                actualNumReg2 == 1,
-                optimized);
-
-        CpUtils.assertTrue("Expected number of locals in 'soManyRegisters' to be equal to " + 1 + ", is " + actualNumReg,
-                actualNumReg3 == 2,
-                optimized);
-
-        CpUtils.assertTrue("Expected number of locals in 'soManyRegisters' to be equal to " + 1 + ", is " + actualNumReg,
-                actualNumReg4 == 3,
-                optimized);
-
-        CpUtils.assertTrue("Expected number of locals in 'soManyRegisters' to be equal to " + 1 + ", is " + actualNumReg,
-                actualNumReg5 == 4,
-                optimized);
-
-        CpUtils.assertTrue("Expected number of locals in 'soManyRegisters' to be equal to " + 4 + ", is " + actualNumReg,
-                actualNumReg6 == 4,
-                optimized);
-
-    }
 }

@@ -27,14 +27,12 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     private final String L_BRACKET = " {\n";
     private final String R_BRACKET = "}\n";
 
-
     private final SymbolTable table;
 
     private final TypeUtils types;
     private final OptUtils ollirTypes;
 
     private int ifCount = 0;
-    //static int whileCounter;
 
 
     private final OllirExprGeneratorVisitor exprVisitor;
@@ -214,7 +212,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
     }
 
 
-
     private String visitParam(JmmNode node, Void unused) {
         StringBuilder code = new StringBuilder();
 
@@ -318,6 +315,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                     .append(ASSIGN).append(ollirType).append(SPACE)
                     .append(rhsExpr.getCode()).append(END_STMT);
         } else {
+
             String varName;
             if (lhs.getKind().equals("VarRefExpr")) {
                 OllirExprResult lhsExpr = exprVisitor.visit(lhs);
@@ -344,14 +342,7 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
                 return code.toString();
             }
 
-            // Um bocado questionável
             if (!rhs.getKind().equals(NOT_EXPR.toString())) {
-                /*
-                String tmp = ollirTypes.nextTemp() + ollirType;
-                code.append(tmp).append(SPACE).append(ASSIGN).append(ollirType).append(SPACE)
-                        .append(rhsExpr.getCode()).append(END_STMT);
-                 */
-
                 code.append(varName).append(ollirType).append(SPACE)
                         .append(ASSIGN).append(ollirType).append(SPACE)
                         .append(rhsExpr.getCode()).append(END_STMT);
@@ -420,7 +411,6 @@ public class OllirGeneratorVisitor extends AJmmVisitor<Void, String> {
 
 
     private String buildConstructor() {
-
         return """
                 .construct %s().V {
                     invokespecial(this, "<init>").V;
