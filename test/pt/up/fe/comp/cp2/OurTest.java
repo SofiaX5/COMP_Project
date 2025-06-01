@@ -25,21 +25,6 @@ public class OurTest {
         return CpUtils.getOllirResult(SpecsIo.getResource(BASE_PATH + filename), Collections.emptyMap(), false);
     }
 
-    static OllirResult getOllirResultOpt(String filename) {
-        Map<String, String> config = new HashMap<>();
-        config.put(ConfigOptions.getOptimize(), "true");
-
-        return CpUtils.getOllirResult(SpecsIo.getResource(BASE_PATH + filename), config, true);
-    }
-
-    static OllirResult getOllirResultRegalloc(String filename, int maxRegs) {
-        Map<String, String> config = new HashMap<>();
-        config.put(ConfigOptions.getRegister(), Integer.toString(maxRegs));
-
-
-        return CpUtils.getOllirResult(SpecsIo.getResource(BASE_PATH + filename), config, true);
-    }
-
 
     @Test
     public void methodTest() {
