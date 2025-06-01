@@ -4,13 +4,13 @@ class OurDceConditionals {
         int y;
         int z;
 
-        x = 5;              // Live - used in condition
-        y = 10;             // Dead - y never used
+        x = 5;
+        y = 10;
 
         if (x < 3) {
-            z = 20;         // Dead - z never used
+            z = 20;
         } else {
-            z = 30;         // Dead - z never used
+            z = 30;
         }
 
         return 15;

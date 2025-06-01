@@ -4,9 +4,9 @@ class OurDceMethodCalls {
         int y;
         int[] arr;
 
-        x = 5;           // Dead - x never used
-        y = this.getValue();  // Dead - y never used, but 'this' IS used
-        arr = new int[10];    // Dead - arr never used
+        x = 5;
+        y = this.getValue();
+        arr = new int[10];
 
         return 42;
     }

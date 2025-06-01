@@ -4,11 +4,11 @@ class OurDceSimpleAssign2 {
         int y;
         int z;
 
-        x = 5;      // Dead - x never used
-        y = x + 10; // Dead - y never used
-        z = 42;     // Dead - z never used
+        x = 5;
+        y = x + 10;
+        z = 42;
 
-        return 100; // Literal return, no variables used
+        return 100;
     }
 
     public static void main(String[] args) {

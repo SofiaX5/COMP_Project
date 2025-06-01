@@ -1,13 +1,13 @@
 class OurDceConditionalAssign {
     public int testConditionalDce(boolean flag) {
         int y;
-        y = 10; // Potentially dead
+        y = 10;
         if (flag) {
-            y = 20; // Potentially dead
+            y = 20;
         } else {
-            y = 30; // Potentially dead
+            y = 30;
         }
-        return 100; // y is not used after the if-else, so assignments to y should be dead
+        return 100;
     }
     public static void main(String[] args) {
     }

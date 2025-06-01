@@ -3,10 +3,9 @@ class OurDceReturnVar {
         int x;
         int y;
 
-        x = 25;             // Live - used in return
-        y = 50;             // Dead - y never used
-
-        return x;           // x IS used here
+        x = 25;
+        y = 50;
+        return x;
     }
 
     public static void main(String[] args) {}

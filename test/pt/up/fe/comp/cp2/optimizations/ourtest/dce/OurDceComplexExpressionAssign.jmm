@@ -1,7 +1,7 @@
 class OurDceComplexExpressionAssign {
     public int testComplexDce(int p1, int p2) {
         int result;
-        result = (p1 + p2) * 5 / 2; // This assignment should be eliminated if 'result' is not used
+        result = (p1 + p2) * 5 / 2;
         return 0;
     }
     public static void main(String[] args) {

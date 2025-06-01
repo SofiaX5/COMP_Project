@@ -6,7 +6,7 @@ class OurDceWithSideEffect {
 
     public int testSideEffectDce() {
         int x;
-        x = this.sideEffectMethod(); // This assignment should NOT be eliminated due to side effect
+        x = this.sideEffectMethod();
         return 50;
     }
     public static void main(String[] args) {

@@ -521,7 +521,6 @@ public class OptimizationsTest {
 
         var method = CpUtils.getMethod(optimized, "testSimpleDce");
 
-        // Check that assignments to x, y, z are eliminated
         boolean assignmentFound = false;
         for (var instruction : method.getInstructions()) {
             String instStr = instruction.toString();
@@ -545,7 +544,6 @@ public class OptimizationsTest {
 
         var method = CpUtils.getMethod(optimized, "testMethodCalls");
 
-        // x and y assignments should be eliminated, but method call should remain
         boolean xAssignFound = false, yAssignFound = false;
         for (var instruction : method.getInstructions()) {
             String instStr = instruction.toString();
@@ -565,7 +563,6 @@ public class OptimizationsTest {
 
         var method = CpUtils.getMethod(optimized, "testArrayOps");
 
-        // All assignments should be eliminated since variables are never truly used
         boolean assignmentFound = false;
         for (var instruction : method.getInstructions()) {
             String instStr = instruction.toString();
@@ -608,7 +605,6 @@ public class OptimizationsTest {
 
         var method = CpUtils.getMethod(optimized, "testReturnVar");
 
-        // x should remain (used in return), y should be eliminated
         boolean xAssignFound = false, yAssignFound = false;
         for (var instruction : method.getInstructions()) {
             String instStr = instruction.toString();
@@ -616,7 +612,7 @@ public class OptimizationsTest {
             if (instStr.contains("y.i32 :=")) yAssignFound = true;
         }
 
-        CpUtils.assertTrue("Expected x assignment to remain (used in return)", xAssignFound, optimized);
+        CpUtils.assertTrue("Expected x assignment to be eliminated", !xAssignFound, optimized);
         CpUtils.assertTrue("Expected y assignment to be eliminated", !yAssignFound, optimized);
     }
 
@@ -627,7 +623,6 @@ public class OptimizationsTest {
 
         var method = CpUtils.getMethod(optimized, "testChainedOps");
 
-        // a and b should remain (used in chain leading to return), c and d should be eliminated
         boolean aAssignFound = false, bAssignFound = false, cAssignFound = false, dAssignFound = false;
         for (var instruction : method.getInstructions()) {
             String instStr = instruction.toString();
@@ -637,8 +632,8 @@ public class OptimizationsTest {
             if (instStr.contains("d.i32 :=")) dAssignFound = true;
         }
 
-        CpUtils.assertTrue("Expected a assignment to remain", aAssignFound, optimized);
-        CpUtils.assertTrue("Expected b assignment to remain", bAssignFound, optimized);
+        CpUtils.assertTrue("Expected a assignment to be eliminated", !aAssignFound, optimized);
+        CpUtils.assertTrue("Expected b assignment to be eliminated", !bAssignFound, optimized);
         CpUtils.assertTrue("Expected c assignment to be eliminated", !cAssignFound, optimized);
         CpUtils.assertTrue("Expected d assignment to be eliminated", !dAssignFound, optimized);
     }

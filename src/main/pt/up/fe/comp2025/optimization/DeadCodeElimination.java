@@ -126,10 +126,12 @@ public class DeadCodeElimination {
 
         String varName = operand.getName();
 
+
+        /* //PROBLEMA
         if (wasConstantPropagated(varName)) {
             System.out.println("Variable '" + varName + "' preserved - was constant propagated");
             return false;
-        }
+        }*/
 
         Set<String> outSet = livenessAnalysis.OutSet.get(assignInst);
         if (outSet == null) {

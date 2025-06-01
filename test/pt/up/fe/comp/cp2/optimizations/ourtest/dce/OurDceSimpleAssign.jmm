@@ -1,7 +1,7 @@
 class OurDceSimpleAssign {
     public int testSimpleDce() {
         int x;
-        x = 10; // This assignment should be eliminated (dead code)
+        x = 10;
         return 0;
     }
     public static void main(String[] args) {
