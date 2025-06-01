@@ -31,6 +31,7 @@ public enum Kind {
     EXPR_STMT,
     ASSIGN_STMT,
     ARRAY_ASSIGN_STMT,
+    NOOP_STMT,
 
 
     EXPR,

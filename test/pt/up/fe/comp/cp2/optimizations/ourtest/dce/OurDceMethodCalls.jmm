@@ -1,0 +1,19 @@
+class OurDceMethodCalls {
+    public int testMethodCalls() {
+        int x;
+        int y;
+        int[] arr;
+
+        x = 5;
+        y = this.getValue();
+        arr = new int[10];
+
+        return 42;
+    }
+
+    public int getValue() {
+        return 100;
+    }
+
+    public static void main(String[] args) {}
+}

@@ -1,0 +1,16 @@
+class OurDceSimpleAssign2 {
+    public int testSimpleDce() {
+        int x;
+        int y;
+        int z;
+
+        x = 5;
+        y = x + 10;
+        z = 42;
+
+        return 100;
+    }
+
+    public static void main(String[] args) {
+    }
+}
