@@ -816,7 +816,6 @@ public class JasminGenerator {
                 .replace("L", "")
                 .replace(";", "");
 
-
         var methodName = ((LiteralElement) invokeVirtual.getMethodName()).getLiteral().replace("\"", "");
 
         var paramTypes = new StringBuilder();
@@ -828,6 +827,24 @@ public class JasminGenerator {
 
         code.append("invokevirtual ").append(className).append("/").append(methodName)
                 .append("(").append(paramTypes).append(")").append(returnType).append(NL);
+
+        if (!returnType.equals("V")) {
+            boolean isValueUsed = false;
+            
+            for (Instruction inst : currentMethod.getInstructions()) {
+                if (inst instanceof AssignInstruction) {
+                    AssignInstruction assign = (AssignInstruction) inst;
+                    if (assign.getRhs() == invokeVirtual) {
+                        isValueUsed = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (!isValueUsed) {
+                code.append("pop").append(NL);
+            }
+        }
 
         return code.toString();
     }
