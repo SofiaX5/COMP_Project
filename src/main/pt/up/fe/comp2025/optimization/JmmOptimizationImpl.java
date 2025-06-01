@@ -79,6 +79,8 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
                 if (dceChanged) {
                     System.out.println("Dead code elimination made changes to OLLIR");
+                    String updatedOllirCode = classUnit.toString(); //aqui temos um problema
+                    return new OllirResult(updatedOllirCode, ollirResult.getConfig());
                 } else {
                     System.out.println("No dead code found to eliminate");
                 }

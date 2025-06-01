@@ -100,6 +100,22 @@ public class DeadCodeElimination {
         return false;
     }
 
+    private boolean wasConstantPropagated(String varName) {
+        for (Instruction inst : currentMethod.getInstructions()) {
+            if (inst instanceof AssignInstruction assignInst) {
+                Element dest = assignInst.getDest();
+                if (dest instanceof Operand operand && operand.getName().equals(varName)) {
+                    if (assignInst.getRhs() instanceof SingleOpInstruction singleOp) {
+                        if (singleOp.getSingleOperand() instanceof LiteralElement) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
 
 
     private boolean isDeadAssignment(AssignInstruction assignInst) {
@@ -110,8 +126,8 @@ public class DeadCodeElimination {
 
         String varName = operand.getName();
 
-        if (wasUsedInConstantFoldedCondition(varName, currentMethod)) {
-            System.out.println("Variable '" + varName + "' preserved - likely used in constant-folded condition");
+        if (wasConstantPropagated(varName)) {
+            System.out.println("Variable '" + varName + "' preserved - was constant propagated");
             return false;
         }
 
