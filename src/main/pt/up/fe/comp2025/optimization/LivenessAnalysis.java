@@ -8,20 +8,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class LivenessAnalysis {
-    private ClassUnit classUnit;
 
     public Map<Instruction, Set<String>> DefSet = new HashMap<>();
     public Map<Instruction, Set<String>> UseSet = new HashMap<>();
     public Map<Instruction, Set<String>> InSet = new HashMap<>();
     public Map<Instruction, Set<String>> OutSet = new HashMap<>();
 
-    public LivenessAnalysis(ClassUnit classUnit) {
-        this.classUnit = classUnit;
-
-        classUnit.buildCFGs();
-        for (Method method : classUnit.getMethods()) {
-            analyzeMethod(method);
-        }
+    public LivenessAnalysis(Method method) {
+        analyzeMethod(method);
     }
 
 
@@ -33,12 +27,10 @@ public class LivenessAnalysis {
             // Def
             Set<String> def = new HashSet<>();
             if (inst instanceof AssignInstruction assign) {
-                var left = assign.getDest();
-                def.add(left.toString());
-
-            } else if (inst instanceof PutFieldInstruction pf) {
-                def.add(pf.getField().getName());
-
+                Element dest = assign.getDest();
+                if (dest instanceof Operand operand) {
+                    def.add(operand.getName());
+                }
             }
 
             // Use
