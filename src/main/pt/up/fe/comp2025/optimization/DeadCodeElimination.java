@@ -9,7 +9,7 @@ public class DeadCodeElimination {
     private ClassUnit classUnit;
     private LivenessAnalysis livenessAnalysis;
     private boolean changed = false;
-    private Method currentMethod; // Add this field
+    private Method currentMethod; 
 
     public DeadCodeElimination(ClassUnit classUnit) {
         this.classUnit = classUnit;
@@ -19,8 +19,10 @@ public class DeadCodeElimination {
         changed = false;
 
         for (Method method : classUnit.getMethods()) {
-            if (eliminateDeadCodeInMethod(method)) {
-                changed = true;
+            if (!method.isConstructMethod()) {
+                if (eliminateDeadCodeInMethod(method)) {
+                    changed = true;
+                }
             }
         }
 
@@ -116,8 +118,6 @@ public class DeadCodeElimination {
         return false;
     }
 
-
-
     private boolean isDeadAssignment(AssignInstruction assignInst) {
         Element dest = assignInst.getDest();
         if (!(dest instanceof Operand operand)) {
@@ -126,12 +126,26 @@ public class DeadCodeElimination {
 
         String varName = operand.getName();
 
+        for (Element param : currentMethod.getParams()) {
+            if (param instanceof Operand paramOp && paramOp.getName().equals(varName)) {
+                return false;
+            }
+        }
+        
+        for (Field field : classUnit.getFields()) {
+            if (field.getFieldName().equals(varName)) {
+                return false;
+            }
+        }
+        
+        if (dest instanceof ArrayOperand) {
+            return false; 
+        }
 
-        /* //PROBLEMA
         if (wasConstantPropagated(varName)) {
             System.out.println("Variable '" + varName + "' preserved - was constant propagated");
             return false;
-        }*/
+        }
 
         Set<String> outSet = livenessAnalysis.OutSet.get(assignInst);
         if (outSet == null) {
@@ -163,6 +177,21 @@ public class DeadCodeElimination {
         }
 
         if (inst instanceof AssignInstruction assignInst) {
+            Element dest = assignInst.getDest();
+            
+            if (dest instanceof ArrayOperand) {
+                return true;
+            }
+            
+            if (dest instanceof Operand operand) {
+                String varName = operand.getName();
+                for (Field field : classUnit.getFields()) {
+                    if (field.getFieldName().equals(varName)) {
+                        return true; 
+                    }
+                }
+            }
+            
             return hasRhsSideEffects(assignInst.getRhs());
         }
 
@@ -183,7 +212,7 @@ public class DeadCodeElimination {
         }
 
         if (rhs instanceof GetFieldInstruction) {
-            return false;
+            return true; 
         }
 
         if (rhs instanceof BinaryOpInstruction ||
@@ -191,7 +220,6 @@ public class DeadCodeElimination {
                 rhs instanceof UnaryOpInstruction) {
             return false;
         }
-
 
         return false;
     }
