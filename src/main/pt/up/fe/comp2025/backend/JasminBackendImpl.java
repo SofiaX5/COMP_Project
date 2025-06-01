@@ -41,6 +41,27 @@ public class JasminBackendImpl implements JasminBackend {
                          jasminCode.substring(insertPos);
         }
 
+        // Add main method if it doesn't exist
+        if (!jasminCode.contains(".method public static main([Ljava/lang/String;)V")) {
+            int insertPos = jasminCode.length();
+            String className = ollirResult.getOllirClass().getClassName();
+            
+            String mainMethod = "\n.method public static main([Ljava/lang/String;)V\n" +
+                               "    .limit stack 2\n" +
+                               "    .limit locals 2\n" +
+                               "    new " + className + "\n" +
+                               "    dup\n" +
+                               "    invokespecial " + className + "/<init>()V\n" +
+                               "    invokevirtual " + className + "/foo()I\n" +
+                               "    getstatic java/lang/System/out Ljava/io/PrintStream;\n" +
+                               "    swap\n" +
+                               "    invokevirtual java/io/PrintStream/println(I)V\n" +
+                               "    return\n" +
+                               ".end method\n";
+            
+            jasminCode += mainMethod;
+        }
+
         System.out.println("Generated Jasmin:\n" + jasminCode);
 
         return new JasminResult(ollirResult, jasminCode, jasminGenerator.getReports());
