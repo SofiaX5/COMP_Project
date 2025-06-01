@@ -69,4 +69,4 @@ Implementation correctly handles:
 |--------------------|------------|------------|
 | Diana Nunes        | up202208247 | Constant propagation, Dead code elimination |
 | Sofia Gonçalves    | up202205020 | Constant folding, Register allocation |
-| Teresa Mascarenhas | up202208247 | Dead code elimination, OLLIR optimization |
+| Teresa Mascarenhas | up202206828 | Dead code elimination, OLLIR optimization |
