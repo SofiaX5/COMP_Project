@@ -69,6 +69,7 @@ public class JasminGenerator {
         generators.put(ArrayLengthInstruction.class, this::generateArrayLength);
         generators.put(InvokeVirtualInstruction.class, this::generateInvokeVirtual);
         generators.put(UnaryOpInstruction.class, this::generateUnaryOp);
+        generators.put(ArrayOperand.class, this::generateArrayOperand);
     }
 
     private String apply(TreeNode node) {
@@ -134,7 +135,7 @@ public class JasminGenerator {
                     .end method
                     """.formatted(fullSuperClass);
             code.append(defaultConstructor);
-            }
+        }
 
 
         // generate code for all other methods
@@ -230,7 +231,46 @@ public class JasminGenerator {
     //esta funçao ta kinda caotica secalhar dá para melhorar !!!!!!!!!!!!!!!!!!!!!!
     private String generateAssign(AssignInstruction assign) {
         var code = new StringBuilder();
+        
+        // Check if we're assigning to an array element
+        if (assign.getDest() instanceof ArrayOperand) {
+            ArrayOperand arrayOp = (ArrayOperand) assign.getDest();
+            
+            System.out.println("DEBUG UUUUUU: Array assignment detected: " + assign);
+            
+            // Carrega a referência do array
+            String arrayName = arrayOp.getName();
+            System.out.println("DEBUG UUUUUUUUU: Array name: " + arrayName);
+            
+            Descriptor descriptor = currentMethod.getVarTable().get(arrayName);
+            System.out.println("DEBUG UUUUUUUUUU: Array descriptor: " + descriptor);
+            
+            int reg = descriptor.getVirtualReg();
+            System.out.println("DEBUG UUUUUUU: Array register: " + reg);
+            
+            // Adiciona a instrução para carregar a referência do array
+            String loadInstr = types.getOptimizedLoad("[I", reg);
+            System.out.println("DEBUG UUUUUUUUUU: Array load instruction: " + loadInstr);
+            code.append(loadInstr).append(NL);
+            
+            System.out.println("DEBUG UUUUUUUUU: Loading array index elements...");
+            for (Element index : arrayOp.getIndexOperands()) {
+                System.out.println("DEBUG UUUUUUUUUU: Processing array index: " + index);
+                code.append(apply(index));
+            }
+            
+            System.out.println("DEBUG UUUUUUU: Loading value to store in array...");
+            code.append(apply(assign.getRhs()));
+            
+            System.out.println("DEBUG UUUUUUU: Adding iastore instruction");
+            code.append("iastore").append(NL);
+            
+            System.out.println("DEBUG UUUUUUUUUU: Final array assignment code:\n" + code.toString());
+            return code.toString();
+        }
+    
 
+        // Original code for optimization cases
         if (assign.getRhs() instanceof BinaryOpInstruction) {
             var binaryOp = (BinaryOpInstruction) assign.getRhs();
             if (binaryOp.getOperation().getOpType() == ADD) {
@@ -552,16 +592,12 @@ public class JasminGenerator {
 
         if (invokeSpecial.getArguments().isEmpty()) {
             if (!invokeSpecial.getOperands().isEmpty()) {
-                code.append(apply(invokeSpecial.getOperands().getFirst()));
+                Element firstOperand = invokeSpecial.getOperands().getFirst();
+                code.append(apply(firstOperand));
             }
-
-            var className = "java/lang/Object";
-            if (invokeSpecial.getReturnType() instanceof org.specs.comp.ollir.type.ClassType) {
-                var classType = (org.specs.comp.ollir.type.ClassType) invokeSpecial.getReturnType();
-                className = classType.getName().replace(".", "/");
-            }
-
-            code.append("invokespecial ").append(className).append("/<init>()V").append(NL);
+            
+            String className = ollirResult.getOllirClass().getClassName();
+            code.append("invokespecial java/lang/Object/<init>()V").append(NL);
             return code.toString();
         }
 
@@ -781,6 +817,44 @@ public class JasminGenerator {
                 throw new NotImplementedException("Unary operation not yet implemented: " + opType);
         }
 
+        return code.toString();
+    }
+
+    private String generateArrayOperand(ArrayOperand arrayOp) {
+        var code = new StringBuilder();
+        
+        System.out.println("DEBUG: Generating array operand for: " + arrayOp);
+        
+        // Obter o nome do array (sem chamar toElement())
+        String arrayName = arrayOp.getName();
+        System.out.println("DEBUG: Array name: " + arrayName);
+        
+        Descriptor descriptor = currentMethod.getVarTable().get(arrayName);
+        System.out.println("DEBUG: Descriptor: " + descriptor);
+        
+        int reg = descriptor.getVirtualReg();
+        System.out.println("DEBUG: Register: " + reg);
+        
+        String arrayType = types.convertType(arrayOp.getType());
+        System.out.println("DEBUG: Array type: " + arrayType);
+        
+        // Carrega a referência do array diretamente
+        String loadInstr = types.getOptimizedLoad("[" + arrayType, reg);
+        System.out.println("DEBUG: Load instruction: " + loadInstr);
+        code.append(loadInstr).append(NL);
+        
+        // Carrega os índices
+        System.out.println("DEBUG: Loading indices...");
+        for (Element index : arrayOp.getIndexOperands()) {
+            System.out.println("DEBUG: Processing index: " + index);
+            code.append(apply(index));
+        }
+        
+        // Adiciona iaload
+        System.out.println("DEBUG: Adding iaload instruction");
+        code.append("iaload").append(NL);
+        
+        System.out.println("DEBUG: Final generated code:\n" + code.toString());
         return code.toString();
     }
 
