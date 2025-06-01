@@ -437,7 +437,6 @@ public class JasminGenerator {
         var opType = binaryOp.getOperation().getOpType();
 
         if (opType == LTH || opType == GTH || opType == LTE || opType == GTE || opType == EQ || opType == NEQ) {
-            // Replace timestamp with incrementing counter
             var currentLabel = labelCounter++;
             var label1 = "label_" + currentLabel + "_true";
             var label2 = "label_" + currentLabel + "_end";
