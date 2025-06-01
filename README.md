@@ -16,14 +16,14 @@
 ---
 
 ### Extra
-- Dead code elimination
+- Dead code elimination (not completed)
 
 
 ---
 
 ### Developed by:
-| Student            | Student ID |
-|--------------------|------------|
-| Diana Nunes        | up202208247 |
-| Sofia Gonçalves    | up202205020 |
-| Teresa Mascarenhas | up202208247 |
+| Student            | Student ID | Contribution |
+|--------------------|------------|------------|
+| Diana Nunes        | up202208247 | |
+| Sofia Gonçalves    | up202205020 | |
+| Teresa Mascarenhas | up202208247 | |

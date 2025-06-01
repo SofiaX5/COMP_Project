@@ -38,7 +38,6 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
     @Override
     protected void buildVisitor() {
-        // parenthesis
         addVisit(NEW_ARRAY_EXPR, this::visitNewArray);
         addVisit(NEW_OBJECT_EXPR, this::visitNewObject);
         addVisit(ARRAY_ELEM_EXPR, this::visitArrayElem);
@@ -53,7 +52,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         addVisit(VAR_REF_EXPR, this::visitVarRef);
         addVisit(PARENTHESIZES_EXPR, this::visitParenthesizesExpr);
 
-        // setDefaultVisit(this::defaultVisit);
+        setDefaultVisit(this::defaultVisit);
     }
 
     private OllirExprResult visitNewArray(JmmNode node, Void unused) {
@@ -139,12 +138,11 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
 
         String targetName;
         boolean isStaticCall = false;
-
         if (target.getKind().equals("ThisExpr")) {
             targetName = "this";
+
         } else {
             targetName = target.get("name");
-
             for (String importStr : table.getImports()) {
                 String simpleImport = importStr.contains(".") ?
                         importStr.substring(importStr.lastIndexOf('.') + 1) : importStr;
@@ -155,17 +153,25 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
             }
         }
 
-        // Rever?
+
         boolean isVarargsCall = false;
-        if (!isStaticCall && !targetName.equals("this")) {
-        } else if (table.getMethods().contains(methodName)) {
-            isVarargsCall = table.getParameters(methodName).size() > 0 &&
-                    paramNodes.size() > table.getParameters(methodName).size();
+        if (isStaticCall || targetName.equals("this")) {
+            if (table.getMethods().contains(methodName)) {
+                List<Symbol> paramsMethod = table.getParameters(methodName);
+
+                if (!paramsMethod.isEmpty()) {
+                    Symbol lastParam = paramsMethod.getLast();
+                    Type typeParam = lastParam.getType();
+
+                    if (typeParam.isArray() && paramNodes.size() >= paramsMethod.size()) {
+                        isVarargsCall = true;
+                    }
+                }
+            }
         }
 
 
         List<String> paramCodes = new ArrayList<>();
-
         if (isVarargsCall) {
             String arrayTempVar = ollirTypes.nextTemp();
             computation.append(arrayTempVar).append(".array.i32 :=.array.i32 ");
@@ -178,7 +184,6 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
                 computation.append(arrayTempVar).append("[").append(i).append(".i32].i32 :=.i32 ");
                 computation.append(paramResult.getCode()).append(END_STMT);
             }
-
             paramCodes.add(arrayTempVar + ".array.i32");
 
         } else {
@@ -202,7 +207,6 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
                     computation.append(tempParam).append(" :=").append(ollirParamType).append(" ").append(paramCode).append(";\n");
                     paramCode = tempParam;
                 }
-
                 paramCodes.add(paramCode);
             }
         }
@@ -212,14 +216,12 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
         String ollirRetType = ollirTypes.toOllirType(returnType);
 
         if (isStaticCall) {
-            code.append("invokestatic(")
-                    .append(targetName).append(", \"").append(methodName).append("\"");
-
+            code.append("invokestatic(").append(targetName).append(", \"").append(methodName).append("\"");
             for (String paramCode : paramCodes) {
                 code.append(", ").append(paramCode);
             }
-
             code.append(")").append(ollirRetType);
+
         } else {
             OllirExprResult targetResult;
 
@@ -230,9 +232,7 @@ public class OllirExprGeneratorVisitor extends PreorderJmmVisitor<Void, OllirExp
                 computation.append(targetResult.getComputation());
             }
 
-            code.append("invokevirtual(")
-                    .append(targetResult.getCode())
-                    .append(", \"").append(methodName).append("\"");
+            code.append("invokevirtual(").append(targetResult.getCode()).append(", \"").append(methodName).append("\"");
 
             for (String paramCode : paramCodes) {
                 code.append(", ").append(paramCode);
