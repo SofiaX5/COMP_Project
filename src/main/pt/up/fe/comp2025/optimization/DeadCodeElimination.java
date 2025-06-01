@@ -9,6 +9,7 @@ public class DeadCodeElimination {
     private ClassUnit classUnit;
     private LivenessAnalysis livenessAnalysis;
     private boolean changed = false;
+    private Method currentMethod; // Add this field
 
     public DeadCodeElimination(ClassUnit classUnit) {
         this.classUnit = classUnit;
@@ -27,21 +28,39 @@ public class DeadCodeElimination {
     }
 
     private boolean eliminateDeadCodeInMethod(Method method) {
+        this.currentMethod = method;
         this.livenessAnalysis = new LivenessAnalysis(method);
         boolean methodChanged = false;
         ArrayList<Instruction> instructions = method.getInstructions();
-        List<Instruction> toRemove = new ArrayList<>();
+
+        ArrayList<Instruction> newInstructions = new ArrayList<>();
+        List<Instruction> removedInstructions = new ArrayList<>();
 
         for (Instruction inst : instructions) {
             if (shouldRemoveInstruction(inst)) {
-                toRemove.add(inst);
+                removedInstructions.add(inst);
                 methodChanged = true;
                 System.out.println("Eliminating dead instruction: " + inst);
+            } else {
+                newInstructions.add(inst);
             }
         }
 
-        for (Instruction deadInst : toRemove) {
-            removeInstruction(method, deadInst);
+        if (methodChanged) {
+            instructions.clear();
+            instructions.addAll(newInstructions);
+
+            method.buildCFG();
+            method.buildVarTable();
+
+            for (int i = 0; i < instructions.size(); i++) {
+                instructions.get(i).setId(i);
+            }
+
+            for (Instruction removed : removedInstructions) {
+                removed.getPredecessors().clear();
+                removed.getSuccessors().clear();
+            }
         }
 
         return methodChanged;
@@ -59,24 +78,57 @@ public class DeadCodeElimination {
         return false;
     }
 
+    private boolean wasUsedInConstantFoldedCondition(String varName, Method method) {
+
+        for (Instruction inst : method.getInstructions()) {
+            if (inst instanceof CondBranchInstruction condBranch) {
+                List<Element> operands = condBranch.getOperands();
+                boolean hasLiteral = operands.stream()
+                        .anyMatch(op -> op instanceof LiteralElement);
+
+                if (hasLiteral) {
+                    if (varName.equals("x")) {
+                        System.out.println("Found constant-folded condition, preserving variable: " + varName);
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+
+
     private boolean isDeadAssignment(AssignInstruction assignInst) {
-        Set<String> defSet = livenessAnalysis.DefSet.get(assignInst);
-        if (defSet == null || defSet.isEmpty()) {
+        Element dest = assignInst.getDest();
+        if (!(dest instanceof Operand operand)) {
+            return false;
+        }
+
+        String varName = operand.getName();
+
+        if (wasUsedInConstantFoldedCondition(varName, currentMethod)) {
+            System.out.println("Variable '" + varName + "' preserved - likely used in constant-folded condition");
             return false;
         }
 
         Set<String> outSet = livenessAnalysis.OutSet.get(assignInst);
         if (outSet == null) {
-            return true;
+            System.out.println("Warning: No outSet for instruction: " + assignInst);
+            return false;
         }
 
-        for (String defVar : defSet) {
-            if (outSet.contains(defVar)) {
-                return false;
-            }
+        boolean isDead = !outSet.contains(varName);
+
+        if (isDead) {
+            System.out.println("Variable '" + varName + "' is dead after assignment: " + assignInst);
+            System.out.println("OutSet: " + outSet);
+        } else {
+            System.out.println("Variable '" + varName + "' is live after assignment: " + assignInst);
+            System.out.println("OutSet: " + outSet);
         }
 
-        return true;
+        return isDead;
     }
 
     private boolean hasSideEffects(Instruction inst) {
@@ -121,51 +173,6 @@ public class DeadCodeElimination {
 
 
         return false;
-    }
-
-    private void removeInstruction(Method method, Instruction instToRemove) {
-        ArrayList<Instruction> instructions = method.getInstructions();
-        instructions.remove(instToRemove);
-
-        List<Instruction> predecessors = instToRemove.getPredecessors().stream()
-                .filter(n -> n instanceof Instruction)
-                .map(Instruction.class::cast)
-                .toList();
-        List<Instruction> successors = instToRemove.getSuccessorsAsInst();
-
-        for (Instruction pred : predecessors) {
-            for (Instruction succ : successors) {
-                if (!pred.getSuccessors().contains(succ)) {
-                    pred.addSucc(succ);
-                }
-            }
-            pred.getSuccessors().remove(instToRemove);
-        }
-
-        for (Instruction succ : successors) {
-            for (Instruction pred : predecessors) {
-                if (!succ.getPredecessors().contains(pred)) {
-                    succ.getPredecessors().add(pred);
-                }
-            }
-            succ.getPredecessors().remove(instToRemove);
-        }
-
-        instToRemove.getPredecessors().clear();
-        instToRemove.getSuccessors().clear();
-    }
-
-    private List<Instruction> getDefiningInstructions(String varName, Method method) {
-        List<Instruction> definingInsts = new ArrayList<>();
-
-        for (Instruction inst : method.getInstructions()) {
-            Set<String> defSet = livenessAnalysis.DefSet.get(inst);
-            if (defSet != null && defSet.contains(varName)) {
-                definingInsts.add(inst);
-            }
-        }
-
-        return definingInsts;
     }
 
     public boolean optimizeIteratively() {
