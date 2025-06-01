@@ -255,7 +255,7 @@ public class JasminGenerator {
             
             System.out.println("DEBUG UUUUUUUUU: Loading array index elements...");
             for (Element index : arrayOp.getIndexOperands()) {
-                System.out.println("DEBUG UUUUUUUUUU: Processing array index: " + index);
+                System.out.println("DEBUG: Processing array index: " + index);
                 code.append(apply(index));
             }
             
@@ -592,12 +592,16 @@ public class JasminGenerator {
 
         if (invokeSpecial.getArguments().isEmpty()) {
             if (!invokeSpecial.getOperands().isEmpty()) {
-                Element firstOperand = invokeSpecial.getOperands().getFirst();
-                code.append(apply(firstOperand));
+                code.append(apply(invokeSpecial.getOperands().getFirst()));
             }
-            
-            String className = ollirResult.getOllirClass().getClassName();
-            code.append("invokespecial java/lang/Object/<init>()V").append(NL);
+
+            var className = "java/lang/Object";
+            if (invokeSpecial.getReturnType() instanceof org.specs.comp.ollir.type.ClassType) {
+                var classType = (org.specs.comp.ollir.type.ClassType) invokeSpecial.getReturnType();
+                className = classType.getName().replace(".", "/");
+            }
+
+            code.append("invokespecial ").append(className).append("/<init>()V").append(NL);
             return code.toString();
         }
 
