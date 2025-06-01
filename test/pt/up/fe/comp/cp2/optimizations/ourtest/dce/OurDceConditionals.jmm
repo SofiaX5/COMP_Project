@@ -1,0 +1,20 @@
+class OurDceConditionals {
+    public int testConditionals() {
+        int x;
+        int y;
+        int z;
+
+        x = 5;              // Live - used in condition
+        y = 10;             // Dead - y never used
+
+        if (x < 3) {
+            z = 20;         // Dead - z never used
+        } else {
+            z = 30;         // Dead - z never used
+        }
+
+        return 15;
+    }
+
+    public static void main(String[] args) {}
+}

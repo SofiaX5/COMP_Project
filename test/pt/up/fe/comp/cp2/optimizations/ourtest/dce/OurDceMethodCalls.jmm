@@ -1,0 +1,19 @@
+class OurDceMethodCalls {
+    public int testMethodCalls() {
+        int x;
+        int y;
+        int[] arr;
+
+        x = 5;           // Dead - x never used
+        y = this.getValue();  // Dead - y never used, but 'this' IS used
+        arr = new int[10];    // Dead - arr never used
+
+        return 42;
+    }
+
+    public int getValue() {
+        return 100;
+    }
+
+    public static void main(String[] args) {}
+}

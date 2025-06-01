@@ -12,9 +12,7 @@ public class DeadCodeElimination {
 
     public DeadCodeElimination(ClassUnit classUnit) {
         this.classUnit = classUnit;
-        this.livenessAnalysis = new LivenessAnalysis(classUnit);
     }
-
 
     public boolean optimize() {
         changed = false;
@@ -29,6 +27,7 @@ public class DeadCodeElimination {
     }
 
     private boolean eliminateDeadCodeInMethod(Method method) {
+        this.livenessAnalysis = new LivenessAnalysis(method);
         boolean methodChanged = false;
         ArrayList<Instruction> instructions = method.getInstructions();
         List<Instruction> toRemove = new ArrayList<>();
@@ -62,11 +61,14 @@ public class DeadCodeElimination {
 
     private boolean isDeadAssignment(AssignInstruction assignInst) {
         Set<String> defSet = livenessAnalysis.DefSet.get(assignInst);
-        if (defSet.isEmpty()) {
+        if (defSet == null || defSet.isEmpty()) {
             return false;
         }
 
         Set<String> outSet = livenessAnalysis.OutSet.get(assignInst);
+        if (outSet == null) {
+            return true;
+        }
 
         for (String defVar : defSet) {
             if (outSet.contains(defVar)) {
@@ -108,32 +110,27 @@ public class DeadCodeElimination {
         }
 
         if (rhs instanceof GetFieldInstruction) {
-            return true;
-        }
-
-        if (rhs instanceof BinaryOpInstruction binOp) {
             return false;
         }
 
-        if (rhs instanceof SingleOpInstruction singleOp) {
+        if (rhs instanceof BinaryOpInstruction ||
+                rhs instanceof SingleOpInstruction ||
+                rhs instanceof UnaryOpInstruction) {
             return false;
         }
 
-        if (rhs instanceof UnaryOpInstruction unaryOp) {
-            return false;
-        }
 
         return false;
     }
 
-
     private void removeInstruction(Method method, Instruction instToRemove) {
         ArrayList<Instruction> instructions = method.getInstructions();
-
         instructions.remove(instToRemove);
 
-
-        List<Instruction> predecessors = instToRemove.getPredecessors().stream().filter((n) -> n instanceof Instruction).map(Instruction.class::cast).toList();
+        List<Instruction> predecessors = instToRemove.getPredecessors().stream()
+                .filter(n -> n instanceof Instruction)
+                .map(Instruction.class::cast)
+                .toList();
         List<Instruction> successors = instToRemove.getSuccessorsAsInst();
 
         for (Instruction pred : predecessors) {
@@ -170,6 +167,7 @@ public class DeadCodeElimination {
 
         return definingInsts;
     }
+
     public boolean optimizeIteratively() {
         boolean overallChanged = false;
         boolean iterationChanged;
@@ -177,8 +175,6 @@ public class DeadCodeElimination {
         final int MAX_ITERATIONS = 10;
 
         do {
-            livenessAnalysis = new LivenessAnalysis(classUnit);
-
             iterationChanged = optimize();
             if (iterationChanged) {
                 overallChanged = true;

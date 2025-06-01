@@ -1,0 +1,13 @@
+class OurDceReturnVar {
+    public int testReturnVar() {
+        int x;
+        int y;
+
+        x = 25;             // Live - used in return
+        y = 50;             // Dead - y never used
+
+        return x;           // x IS used here
+    }
+
+    public static void main(String[] args) {}
+}

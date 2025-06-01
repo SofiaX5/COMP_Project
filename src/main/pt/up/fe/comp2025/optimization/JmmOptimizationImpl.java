@@ -60,7 +60,9 @@ public class JmmOptimizationImpl implements JmmOptimization {
 
     @Override
     public OllirResult optimize(OllirResult ollirResult) {
-        if (ollirResult.getConfig().getOrDefault("optimize", "false").equals("true")) {
+        if (ollirResult.getConfig().getOrDefault("optimize", "false").equals("true") ||
+                ollirResult.getConfig().getOrDefault("-o", "false").equals("true")) {
+            System.out.println("DEBUG: Running DCE optimization");
             try {
                 ClassUnit classUnit = ollirResult.getOllirClass();
 

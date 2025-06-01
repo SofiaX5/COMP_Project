@@ -88,15 +88,73 @@ public class LivenessAnalysis {
                 if (binOp.getRightOperand() instanceof Operand rop) {
                     used.add(rop.getName());
                 }
-
             } else if (assign.getRhs() instanceof SingleOpInstruction singOp) {
                 if (singOp.getSingleOperand() instanceof Operand op) {
                     used.add(op.getName());
                 }
+            } else if (assign.getRhs() instanceof CallInstruction call) {
+                if (call.getArguments().getFirst() instanceof Operand op) {
+                    used.add(op.getName());
+                }
+                for (Element arg : call.getOperands()) {
+                    if (arg instanceof Operand op) {
+                        used.add(op.getName());
+                    }
+                }
+            } else if (assign.getRhs() instanceof GetFieldInstruction gf) {
+                if (gf.getOperands().getFirst() instanceof Operand op) {
+                    used.add(op.getName());
+                }
             }
-
         } else if (inst instanceof GetFieldInstruction gf) {
-            used.add(gf.getField().getName());
+            if (gf.getOperands().getFirst() instanceof Operand op) {
+                used.add(op.getName());
+            }
+        } else if (inst instanceof PutFieldInstruction pf) {
+            if (pf.getOperands().getFirst() instanceof Operand op) {
+                used.add(op.getName());
+            }
+            if (pf.getOperands().get(2) instanceof Operand op) {
+                used.add(op.getName());
+            }
+        } else if (inst instanceof CallInstruction call) {
+            if (call.getArguments().getFirst() instanceof Operand op) {
+                used.add(op.getName());
+            }
+            for (Element arg : call.getOperands()) {
+                if (arg instanceof Operand op) {
+                    used.add(op.getName());
+                }
+            }
+        } else if (inst instanceof ReturnInstruction ret) {
+            if (ret.hasReturnValue()) {
+                Element returnElement = ret.getOperand().get();
+                if (returnElement instanceof Operand op) {
+                    used.add(op.getName());
+                }
+            }
+        } else if (inst instanceof CondBranchInstruction cond) {
+            for (Element operand : cond.getOperands()) {
+                if (operand instanceof Operand op) {
+                    used.add(op.getName());
+                }
+            }
+        } else if (inst instanceof GotoInstruction ) {
+        } else if (inst instanceof UnaryOpInstruction unary) {
+            if (unary.getOperand() instanceof Operand op) {
+                used.add(op.getName());
+            }
+        } else if (inst instanceof BinaryOpInstruction binOp) {
+            if (binOp.getLeftOperand() instanceof Operand lop) {
+                used.add(lop.getName());
+            }
+            if (binOp.getRightOperand() instanceof Operand rop) {
+                used.add(rop.getName());
+            }
+        } else if (inst instanceof SingleOpInstruction singOp) {
+            if (singOp.getSingleOperand() instanceof Operand op) {
+                used.add(op.getName());
+            }
         }
 
         return used;

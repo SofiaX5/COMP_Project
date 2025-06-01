@@ -1,0 +1,17 @@
+class OurDceChainedOps {
+    public int testChainedOps() {
+        int a;
+        int b;
+        int c;
+        int d;
+
+        a = 1;              // Live - used in b assignment
+        b = a * 2;          // Live - used in c assignment
+        c = b + 5;          // Dead - c never used
+        d = 100;            // Dead - d never used
+
+        return b;           // b IS used here
+    }
+
+    public static void main(String[] args) {}
+}

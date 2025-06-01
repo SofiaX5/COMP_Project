@@ -1,0 +1,17 @@
+class OurDceBinaryOps {
+    public int testBinaryOps() {
+        int a;
+        int b;
+        int c;
+        int d;
+
+        a = 5;              // Live - used in binary op
+        b = 10;             // Live - used in binary op
+        c = a + b;          // Dead - c never used, but a and b ARE used
+        d = !true;          // Dead - d never used (unary op)
+
+        return 42;
+    }
+
+    public static void main(String[] args) {}
+}

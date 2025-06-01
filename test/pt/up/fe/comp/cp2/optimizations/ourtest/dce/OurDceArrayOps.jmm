@@ -1,0 +1,15 @@
+class OurDceArrayOps {
+    public int testArrayOps() {
+        int[] arr;
+        int x;
+        int y;
+
+        arr = new int[5];     // Dead - arr never used
+        x = arr.length;       // Dead - x never used, but arr IS used here
+        y = arr[0];           // Dead - y never used, but arr IS used here
+
+        return 10;
+    }
+
+    public static void main(String[] args) {}
+}
