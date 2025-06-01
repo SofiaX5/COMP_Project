@@ -1,0 +1,12 @@
+class OurDceReturnVar {
+    public int testReturnVar() {
+        int x;
+        int y;
+
+        x = 25;
+        y = 50;
+        return x;
+    }
+
+    public static void main(String[] args) {}
+}

@@ -378,4 +378,264 @@ public class OptimizationsTest {
         CpUtils.assertTrue("Expected return to NOT be a literal", !hasLiteralReturn, optimized);    }
 
 
+
+    //===============
+    //   Our DCE Tests
+    //===============
+
+    // Teste DCE 1: Atribuição simples a variável não utilizada
+    @Test
+    public void OurDceSimpleAssign() {
+        String filename = "ourtest/dce/OurDceSimpleAssign.jmm";
+
+        OllirResult original = getOllirResult(filename);
+        OllirResult optimized = getOllirResultOpt(filename);
+
+        CpUtils.assertNotEquals("Expected code to change with -o flag (DCE Simple Assign)",
+                original.getOllirCode(), optimized.getOllirCode(),
+                optimized);
+
+        var method = CpUtils.getMethod(optimized, "testSimpleDce");
+        boolean assignmentToXFound = false;
+        for (var instruction : method.getInstructions()) {
+            if (instruction.toString().contains("x.i32 :=")) {
+                assignmentToXFound = true;
+                break;
+            }
+        }
+        CpUtils.assertTrue("Expected assignment to 'x' to be eliminated", !assignmentToXFound, optimized);
+
+        CpUtils.assertLiteralReturn("0", method, optimized);
+    }
+
+    // Teste DCE 2: Múltiplas reatribuições a variável não utilizada
+    @Test
+    public void OurDceReassignNoUse() {
+        String filename = "ourtest/dce/OurDceReassignNoUse.jmm";
+
+        OllirResult original = getOllirResult(filename);
+        OllirResult optimized = getOllirResultOpt(filename);
+
+        CpUtils.assertNotEquals("Expected code to change with -o flag (DCE Reassign No Use)",
+                original.getOllirCode(), optimized.getOllirCode(),
+                optimized);
+
+        var method = CpUtils.getMethod(optimized, "testReassignDce");
+        boolean assignmentToAFound = false;
+        for (var instruction : method.getInstructions()) {
+            if (instruction.toString().contains("a.i32 :=")) {
+                assignmentToAFound = true;
+                break;
+            }
+        }
+        CpUtils.assertTrue("Expected all assignments to 'a' to be eliminated", !assignmentToAFound, optimized);
+
+        CpUtils.assertLiteralReturn("5", method, optimized);
+    }
+
+    // Teste DCE 3: Atribuição dentro de condicional a variável não utilizada
+    @Test
+    public void OurDceConditionalAssign() {
+        String filename = "ourtest/dce/OurDceConditionalAssign.jmm";
+
+        OllirResult original = getOllirResult(filename);
+        OllirResult optimized = getOllirResultOpt(filename);
+
+        CpUtils.assertNotEquals("Expected code to change with -o flag (DCE Conditional Assign)",
+                original.getOllirCode(), optimized.getOllirCode(),
+                optimized);
+
+        var method = CpUtils.getMethod(optimized, "testConditionalDce");
+        boolean assignmentToYFound = false;
+        for (var instruction : method.getInstructions()) {
+            if (instruction.toString().contains("y.i32 :=")) {
+                assignmentToYFound = true;
+                break;
+            }
+        }
+        CpUtils.assertTrue("Expected assignments to 'y' in conditional branches to be eliminated", !assignmentToYFound, optimized);
+
+        CpUtils.assertLiteralReturn("100", method, optimized);
+    }
+
+    // Teste DCE 4: Atribuição com expressão complexa a variável não utilizada
+    @Test
+    public void OurDceComplexExpressionAssign() {
+        String filename = "ourtest/dce/OurDceComplexExpressionAssign.jmm";
+
+        OllirResult original = getOllirResult(filename);
+        OllirResult optimized = getOllirResultOpt(filename);
+
+        CpUtils.assertNotEquals("Expected code to change with -o flag (DCE Complex Expression Assign)",
+                original.getOllirCode(), optimized.getOllirCode(),
+                optimized);
+
+        var method = CpUtils.getMethod(optimized, "testComplexDce");
+        boolean assignmentToResultFound = false;
+        for (var instruction : method.getInstructions()) {
+            if (instruction.toString().contains("result.i32 :=")) {
+                assignmentToResultFound = true;
+                break;
+            }
+        }
+        CpUtils.assertTrue("Expected assignment to 'result' to be eliminated", !assignmentToResultFound, optimized);
+
+        CpUtils.assertLiteralReturn("0", method, optimized);
+    }
+
+    // Teste DCE 5: Atribuição com efeito colateral (side effect) - NÃO DEVE SER ELIMINADO
+    @Test
+    public void OurDceWithSideEffect() {
+        String filename = "ourtest/dce/OurDceWithSideEffect.jmm";
+
+        OllirResult original = getOllirResult(filename);
+        OllirResult optimized = getOllirResultOpt(filename);
+
+        CpUtils.assertEquals("Expected code to NOT change with -o flag (DCE With Side Effect) as assignment has side effect",
+                original.getOllirCode(), optimized.getOllirCode(),
+                optimized);
+
+        var method = CpUtils.getMethod(optimized, "testSideEffectDce");
+        boolean assignmentToXFound = false;
+        for (var instruction : method.getInstructions()) {
+            if (instruction.toString().contains("x.i32 :=")) {
+                assignmentToXFound = true;
+                break;
+            }
+        }
+        CpUtils.assertTrue("Expected assignment to 'x' to NOT be eliminated due to side effect", assignmentToXFound, optimized);
+
+        CpUtils.assertLiteralReturn("50", method, optimized);
+    }
+
+    @Test
+    public void OurDceSimpleAssign2() {
+        String filename = "ourtest/dce/OurDceSimpleAssign2.jmm";
+
+        OllirResult original = getOllirResult(filename);
+        OllirResult optimized = getOllirResultOpt(filename);
+
+        CpUtils.assertNotEquals("Expected code to change with -o flag (DCE Simple Assign)",
+                original.getOllirCode(), optimized.getOllirCode(),
+                optimized);
+
+        var method = CpUtils.getMethod(optimized, "testSimpleDce");
+
+        boolean assignmentFound = false;
+        for (var instruction : method.getInstructions()) {
+            String instStr = instruction.toString();
+            if (instStr.contains("x.i32 :=") ||
+                    instStr.contains("y.i32 :=") ||
+                    instStr.contains("z.i32 :=")) {
+                assignmentFound = true;
+                break;
+            }
+        }
+        CpUtils.assertTrue("Expected assignments to 'x', 'y', 'z' to be eliminated", !assignmentFound, optimized);
+
+        CpUtils.assertLiteralReturn("100", method, optimized);
+    }
+
+    @Test
+    public void OurDceMethodCalls() {
+        String filename = "ourtest/dce/OurDceMethodCalls.jmm";
+        OllirResult original = getOllirResult(filename);
+        OllirResult optimized = getOllirResultOpt(filename);
+
+        var method = CpUtils.getMethod(optimized, "testMethodCalls");
+
+        boolean xAssignFound = false, yAssignFound = false;
+        for (var instruction : method.getInstructions()) {
+            String instStr = instruction.toString();
+            if (instStr.contains("x.i32 :=")) xAssignFound = true;
+            if (instStr.contains("y.i32 :=")) yAssignFound = true;
+        }
+
+        CpUtils.assertTrue("Expected x assignment to be eliminated", !xAssignFound, optimized);
+        CpUtils.assertTrue("Expected y assignment to be eliminated", !yAssignFound, optimized);
+    }
+
+
+    @Test
+    public void OurDceArrayOps() {
+        String filename = "ourtest/dce/OurDceArrayOps.jmm";
+        OllirResult optimized = getOllirResultOpt(filename);
+
+        var method = CpUtils.getMethod(optimized, "testArrayOps");
+
+        boolean assignmentFound = false;
+        for (var instruction : method.getInstructions()) {
+            String instStr = instruction.toString();
+            if (instStr.contains("arr.array.i32 :=") ||
+                    instStr.contains("x.i32 :=") ||
+                    instStr.contains("y.i32 :=")) {
+                assignmentFound = true;
+                break;
+            }
+        }
+
+        CpUtils.assertTrue("Expected all assignments to be eliminated", !assignmentFound, optimized);
+    }
+
+
+    @Test
+    public void OurDceConditionals() {
+        String filename = "ourtest/dce/OurDceConditionals.jmm";
+        OllirResult optimized = getOllirResultOpt(filename);
+
+        var method = CpUtils.getMethod(optimized, "testConditionals");
+
+        boolean xAssignFound = false, yAssignFound = false, zAssignFound = false;
+        for (var instruction : method.getInstructions()) {
+            String instStr = instruction.toString();
+            if (instStr.contains("x.i32 :=")) xAssignFound = true;
+            if (instStr.contains("y.i32 :=")) yAssignFound = true;
+            if (instStr.contains("z.i32 :=")) zAssignFound = true;
+        }
+
+        CpUtils.assertTrue("Expected x assignment to be eliminated", !xAssignFound, optimized);
+        CpUtils.assertTrue("Expected y assignment to be eliminated", !yAssignFound, optimized);
+        CpUtils.assertTrue("Expected z assignment to be eliminated", !zAssignFound, optimized);
+    }
+
+    @Test
+    public void OurDceReturnVar() {
+        String filename = "ourtest/dce/OurDceReturnVar.jmm";
+        OllirResult optimized = getOllirResultOpt(filename);
+
+        var method = CpUtils.getMethod(optimized, "testReturnVar");
+
+        boolean xAssignFound = false, yAssignFound = false;
+        for (var instruction : method.getInstructions()) {
+            String instStr = instruction.toString();
+            if (instStr.contains("x.i32 :=")) xAssignFound = true;
+            if (instStr.contains("y.i32 :=")) yAssignFound = true;
+        }
+
+        CpUtils.assertTrue("Expected x assignment to be eliminated", !xAssignFound, optimized);
+        CpUtils.assertTrue("Expected y assignment to be eliminated", !yAssignFound, optimized);
+    }
+
+    @Test
+    public void OurDceChainedOps() {
+        String filename = "ourtest/dce/OurDceChainedOps.jmm";
+        OllirResult optimized = getOllirResultOpt(filename);
+
+        var method = CpUtils.getMethod(optimized, "testChainedOps");
+
+        boolean aAssignFound = false, bAssignFound = false, cAssignFound = false, dAssignFound = false;
+        for (var instruction : method.getInstructions()) {
+            String instStr = instruction.toString();
+            if (instStr.contains("a.i32 :=")) aAssignFound = true;
+            if (instStr.contains("b.i32 :=")) bAssignFound = true;
+            if (instStr.contains("c.i32 :=")) cAssignFound = true;
+            if (instStr.contains("d.i32 :=")) dAssignFound = true;
+        }
+
+        CpUtils.assertTrue("Expected a assignment to be eliminated", !aAssignFound, optimized);
+        CpUtils.assertTrue("Expected b assignment to be eliminated", !bAssignFound, optimized);
+        CpUtils.assertTrue("Expected c assignment to be eliminated", !cAssignFound, optimized);
+        CpUtils.assertTrue("Expected d assignment to be eliminated", !dAssignFound, optimized);
+    }
+
 }

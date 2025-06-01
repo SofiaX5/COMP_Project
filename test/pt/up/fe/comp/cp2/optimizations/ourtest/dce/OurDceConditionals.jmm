@@ -1,0 +1,20 @@
+class OurDceConditionals {
+    public int testConditionals() {
+        int x;
+        int y;
+        int z;
+
+        x = 5;
+        y = 10;
+
+        if (x < 3) {
+            z = 20;
+        } else {
+            z = 30;
+        }
+
+        return 15;
+    }
+
+    public static void main(String[] args) {}
+}

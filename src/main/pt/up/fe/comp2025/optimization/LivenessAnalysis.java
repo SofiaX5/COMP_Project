@@ -21,7 +21,7 @@ public class LivenessAnalysis {
 
     public void analyzeMethod(Method method) {
         ArrayList<Instruction> instList = method.getInstructions();
-        int instSize = instList.size();
+        method.buildCFG();
 
         for (Instruction inst : instList) {
             // Def
@@ -42,39 +42,53 @@ public class LivenessAnalysis {
             OutSet.put(inst, new HashSet<>());
         }
 
+        boolean changed;
+        int iterations = 0;
+        final int MAX_ITERATIONS = 100;
 
-        // In and out
-        boolean livedChanged;
         do {
-            livedChanged = false;
+            changed = false;
+            iterations++;
 
-            for (int i = instSize - 1; i >= 0; i--) {
+            for (int i = instList.size() - 1; i >= 0; i--) {
                 Instruction inst = instList.get(i);
 
-                Set<String> inOld = new HashSet<>(InSet.get(inst));
-                Set<String> outOld = new HashSet<>(OutSet.get(inst));
+                Set<String> oldIn = new HashSet<>(InSet.get(inst));
+                Set<String> oldOut = new HashSet<>(OutSet.get(inst));
 
-                // Out[n] = ∪ In[sucessors]
-                Set<String> out = new HashSet<>();
-                for (Instruction succInst : inst.getSuccessorsAsInst()) {
-                    out.addAll(InSet.getOrDefault(succInst , new HashSet<>()));
+                Set<String> newOut = new HashSet<>();
+                List<Instruction> successors = inst.getSuccessorsAsInst();
+
+                if (inst instanceof CondBranchInstruction) {
+                    System.out.println("Conditional instruction successors: " + successors.size());
                 }
 
-                // In[n] = Use[n] ∪ (Out[n] - Def[n])
-                Set<String> in = new HashSet<> (UseSet.get(inst));
-                Set<String> outMinusDef = new HashSet<>(out);
+                for (Instruction succ : successors) {
+                    Set<String> succIn = InSet.get(succ);
+                    if (succIn != null) {
+                        newOut.addAll(succIn);
+                    }
+                }
+
+                Set<String> newIn = new HashSet<>(UseSet.get(inst));
+                Set<String> outMinusDef = new HashSet<>(newOut);
                 outMinusDef.removeAll(DefSet.get(inst));
-                in.addAll(outMinusDef);
+                newIn.addAll(outMinusDef);
 
-                InSet.put(inst, in);
-                OutSet.put(inst, out);
+                OutSet.put(inst, newOut);
+                InSet.put(inst, newIn);
 
-                if (!in.equals(inOld) || !out.equals(outOld)) {
-                    livedChanged = true;
+                if (!newIn.equals(oldIn) || !newOut.equals(oldOut)) {
+                    changed = true;
                 }
             }
-        } while (livedChanged);
+        } while (changed && iterations < MAX_ITERATIONS);
+
+        if (iterations >= MAX_ITERATIONS) {
+            System.out.println("Warning: Liveness analysis stopped after " + MAX_ITERATIONS + " iterations");
+        }
     }
+
 
 
     public Set<String> getUse(Instruction inst) {
@@ -88,15 +102,75 @@ public class LivenessAnalysis {
                 if (binOp.getRightOperand() instanceof Operand rop) {
                     used.add(rop.getName());
                 }
-
             } else if (assign.getRhs() instanceof SingleOpInstruction singOp) {
                 if (singOp.getSingleOperand() instanceof Operand op) {
                     used.add(op.getName());
                 }
+            } else if (assign.getRhs() instanceof CallInstruction call) {
+                if (!call.getArguments().isEmpty() && call.getArguments().getFirst() instanceof Operand op) {
+                    used.add(op.getName());
+                }
+                for (Element arg : call.getOperands()) {
+                    if (arg instanceof Operand op) {
+                        used.add(op.getName());
+                    }
+                }
+            } else if (assign.getRhs() instanceof GetFieldInstruction gf) {
+                if (!gf.getOperands().isEmpty() && gf.getOperands().getFirst() instanceof Operand op) {
+                    used.add(op.getName());
+                }
             }
-
         } else if (inst instanceof GetFieldInstruction gf) {
-            used.add(gf.getField().getName());
+            if (!gf.getOperands().isEmpty() && gf.getOperands().getFirst() instanceof Operand op) {
+                used.add(op.getName());
+            }
+        } else if (inst instanceof PutFieldInstruction pf) {
+            List<Element> operands = pf.getOperands();
+            // Fix: Check bounds before accessing elements
+            if (operands.size() > 0 && operands.get(0) instanceof Operand op) {
+                used.add(op.getName());
+            }
+            if (operands.size() > 2 && operands.get(2) instanceof Operand op) {
+                used.add(op.getName());
+            }
+        } else if (inst instanceof CallInstruction call) {
+            if (!call.getArguments().isEmpty() && call.getArguments().getFirst() instanceof Operand op) {
+                used.add(op.getName());
+            }
+            for (Element arg : call.getOperands()) {
+                if (arg instanceof Operand op) {
+                    used.add(op.getName());
+                }
+            }
+        } else if (inst instanceof ReturnInstruction ret) {
+            if (ret.hasReturnValue()) {
+                Element returnElement = ret.getOperand().get();
+                if (returnElement instanceof Operand op) {
+                    used.add(op.getName());
+                }
+            }
+        } else if (inst instanceof CondBranchInstruction cond) {
+            for (Element operand : cond.getOperands()) {
+                if (operand instanceof Operand op) {
+                    used.add(op.getName());
+                }
+            }
+        } else if (inst instanceof GotoInstruction ) {
+        } else if (inst instanceof UnaryOpInstruction unary) {
+            if (unary.getOperand() instanceof Operand op) {
+                used.add(op.getName());
+            }
+        } else if (inst instanceof BinaryOpInstruction binOp) {
+            if (binOp.getLeftOperand() instanceof Operand lop) {
+                used.add(lop.getName());
+            }
+            if (binOp.getRightOperand() instanceof Operand rop) {
+                used.add(rop.getName());
+            }
+        } else if (inst instanceof SingleOpInstruction singOp) {
+            if (singOp.getSingleOperand() instanceof Operand op) {
+                used.add(op.getName());
+            }
         }
 
         return used;

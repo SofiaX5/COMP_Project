@@ -1,0 +1,14 @@
+class OurDceConditionalAssign {
+    public int testConditionalDce(boolean flag) {
+        int y;
+        y = 10;
+        if (flag) {
+            y = 20;
+        } else {
+            y = 30;
+        }
+        return 100;
+    }
+    public static void main(String[] args) {
+    }
+}

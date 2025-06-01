@@ -1,0 +1,17 @@
+class OurDceBinaryOps {
+    public int testBinaryOps() {
+        int a;
+        int b;
+        int c;
+        int d;
+
+        a = 5;
+        b = 10;
+        c = a + b;
+        d = !true;
+
+        return 42;
+    }
+
+    public static void main(String[] args) {}
+}
