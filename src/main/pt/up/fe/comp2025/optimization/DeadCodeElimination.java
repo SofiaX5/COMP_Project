@@ -79,7 +79,6 @@ public class DeadCodeElimination {
     }
 
     private boolean wasUsedInConstantFoldedCondition(String varName, Method method) {
-
         for (Instruction inst : method.getInstructions()) {
             if (inst instanceof CondBranchInstruction condBranch) {
                 List<Element> operands = condBranch.getOperands();
@@ -87,8 +86,12 @@ public class DeadCodeElimination {
                         .anyMatch(op -> op instanceof LiteralElement);
 
                 if (hasLiteral) {
-                    if (varName.equals("x")) {
-                        System.out.println("Found constant-folded condition, preserving variable: " + varName);
+                    boolean varUsedInCondition = operands.stream()
+                            .anyMatch(op -> op instanceof Operand operand &&
+                                    operand.getName().equals(varName));
+
+                    if (varUsedInCondition) {
+                        System.out.println("Found constant-folded condition using variable: " + varName);
                         return true;
                     }
                 }

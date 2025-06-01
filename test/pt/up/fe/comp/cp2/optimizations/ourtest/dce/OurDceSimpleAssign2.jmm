@@ -5,7 +5,7 @@ class OurDceSimpleAssign2 {
         int z;
 
         x = 5;      // Dead - x never used
-        y = x + 10; // Dead - y never used, but x IS used here (your getUse will catch this)
+        y = x + 10; // Dead - y never used
         z = 42;     // Dead - z never used
 
         return 100; // Literal return, no variables used

@@ -580,6 +580,7 @@ public class OptimizationsTest {
         CpUtils.assertTrue("Expected all assignments to be eliminated", !assignmentFound, optimized);
     }
 
+
     @Test
     public void OurDceConditionals() {
         String filename = "ourtest/dce/OurDceConditionals.jmm";
@@ -587,7 +588,6 @@ public class OptimizationsTest {
 
         var method = CpUtils.getMethod(optimized, "testConditionals");
 
-        // x should remain (used in condition), y and z should be eliminated
         boolean xAssignFound = false, yAssignFound = false, zAssignFound = false;
         for (var instruction : method.getInstructions()) {
             String instStr = instruction.toString();
@@ -596,7 +596,7 @@ public class OptimizationsTest {
             if (instStr.contains("z.i32 :=")) zAssignFound = true;
         }
 
-        CpUtils.assertTrue("Expected x assignment to remain (used in condition)", xAssignFound, optimized);
+        CpUtils.assertTrue("Expected x assignment to be eliminated", !xAssignFound, optimized);
         CpUtils.assertTrue("Expected y assignment to be eliminated", !yAssignFound, optimized);
         CpUtils.assertTrue("Expected z assignment to be eliminated", !zAssignFound, optimized);
     }
