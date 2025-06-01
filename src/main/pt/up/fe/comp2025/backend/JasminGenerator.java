@@ -40,6 +40,8 @@ public class JasminGenerator {
 
     private final FunctionClassMap<TreeNode, String> generators;
 
+    private int labelCounter = 0;
+
     public JasminGenerator(OllirResult ollirResult) {
         this.ollirResult = ollirResult;
 
@@ -435,8 +437,10 @@ public class JasminGenerator {
         var opType = binaryOp.getOperation().getOpType();
 
         if (opType == LTH || opType == GTH || opType == LTE || opType == GTE || opType == EQ || opType == NEQ) {
-            var label1 = "label_" + System.currentTimeMillis() + "_true";
-            var label2 = "label_" + System.currentTimeMillis() + "_end";
+            // Replace timestamp with incrementing counter
+            var currentLabel = labelCounter++;
+            var label1 = "label_" + currentLabel + "_true";
+            var label2 = "label_" + currentLabel + "_end";
 
             String jumpInstruction = switch (opType) {
                 case LTH -> "if_icmplt";
